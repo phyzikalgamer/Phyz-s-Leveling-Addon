@@ -14,13 +14,31 @@ function addon.StyleGuideRow(frame)
     if not frame.step then return end
     local state = RowState(frame.step)
     if not frame.phyzGlow then
-        local glow = CreateFrame('Frame', nil, frame, 'BackdropTemplate')
-        glow:SetPoint('TOPLEFT', -2, 2)
-        glow:SetPoint('BOTTOMRIGHT', 2, -2)
-        glow:SetBackdrop({edgeFile = 'Interface/Tooltips/UI-Tooltip-Border', edgeSize = 12})
-        glow:SetBackdropBorderColor(1, 0.82, 0, 0.95)
-        glow:EnableMouse(false)
-        frame.phyzGlow = glow
+        -- ScrollFrames clip row textures, but separate child frames can escape
+        -- the viewport. Draw an inset texture border so the scrollbar is intact.
+        local textures = {}
+        for _, edge in ipairs({'TOP', 'BOTTOM', 'LEFT', 'RIGHT'}) do
+            for layer = 1, 2 do
+                local texture = frame:CreateTexture(nil, 'OVERLAY')
+                texture:SetColorTexture(1, 0.82, 0, layer == 1 and 0.18 or 0.9)
+                local thickness = layer == 1 and 4 or 1
+                if edge == 'TOP' or edge == 'BOTTOM' then
+                    local y = edge == 'TOP' and -2 or 2
+                    texture:SetPoint(edge .. 'LEFT', frame, edge .. 'LEFT', 2, y)
+                    texture:SetPoint(edge .. 'RIGHT', frame, edge .. 'RIGHT', -2, y)
+                    texture:SetHeight(thickness)
+                else
+                    local x = edge == 'LEFT' and 2 or -2
+                    texture:SetPoint('TOP' .. edge, frame, 'TOP' .. edge, x, -2)
+                    texture:SetPoint('BOTTOM' .. edge, frame, 'BOTTOM' .. edge, x, 2)
+                    texture:SetWidth(thickness)
+                end
+                textures[#textures + 1] = texture
+            end
+        end
+        frame.phyzGlow = {SetShown = function(_, shown)
+            for _, texture in ipairs(textures) do texture:SetShown(shown) end
+        end}
     end
     frame.phyzGlow:SetShown(state == 'current')
     if state == 'done' then

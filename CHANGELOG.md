@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.9 — 2026-11-15
+
+- Inset the active-step border and clip child highlights to the guide viewport.
+
 ## 0.2.8 — 2026-11-15
 
 - Completed steps use grey text and a darker background, including embedded text colours.
