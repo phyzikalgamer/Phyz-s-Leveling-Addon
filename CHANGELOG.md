@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.12 — 2026-11-15
+
+- Removed the active-step border; retained the background highlight and all other styling.
+
 ## 0.2.11 — 2026-11-15
 
 - Replaced the active-step border artwork with a simple one-pixel yellow outline.

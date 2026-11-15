@@ -36,7 +36,7 @@ function addon.StyleGuideRow(frame)
             for _, texture in ipairs(textures) do texture:SetShown(shown) end
         end}
     end
-    frame.phyzGlow:SetShown(state == 'current')
+    frame.phyzGlow:SetShown(false)
     if state == 'done' then
         frame:SetBackdropColor(0.025, 0.022, 0.018, 1)
     elseif state == 'current' then
