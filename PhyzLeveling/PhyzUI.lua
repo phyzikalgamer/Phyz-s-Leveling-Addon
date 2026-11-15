@@ -29,3 +29,13 @@ end
 hooksecurefunc(addon, 'SetupGuideWindow', Skin)
 hooksecurefunc(addon.RXPFrame, 'UpdateVisuals', Skin)
 hooksecurefunc(addon, 'RenderFrame', Skin)
+
+-- Apply the readability defaults once to existing profiles as well as new ones.
+-- Later font choices remain under the player's control.
+hooksecurefunc(addon.settings, 'InitializeDatabase', function()
+    local p = addon.settings.profile
+    if p and not p.phyzReadableLayout then
+        p.guideFontSize = math.max(p.guideFontSize or 9, 12)
+        p.phyzReadableLayout = true
+    end
+end)

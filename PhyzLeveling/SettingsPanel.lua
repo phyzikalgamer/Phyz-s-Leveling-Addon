@@ -166,7 +166,7 @@ local settingsDBDefaults = {
         updateFrequency = 75,
         phase = 6,
         xprate = 1,
-        guideFontSize = 9,
+        guideFontSize = 12,
         activeItemsScale = 1,
         questLogSize = addon.game == "CLASSIC" and 20 or addon.game == "FOREVER" and 40 or 25,
 

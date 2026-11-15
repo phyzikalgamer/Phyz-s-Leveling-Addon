@@ -19,7 +19,7 @@ function addon.SetResizeBounds(frame, width, height)
     end
 end
 
-addon.width, addon.height = 360, 180 -- Phyz: readable classic quest-log proportions
+addon.width, addon.height = 400, 260 -- Phyz: readable classic quest-log proportions
 
 local RXPFrame = CreateFrame("Frame", "RXPFrame", UIParent, BackdropTemplate)
 addon.RXPFrame = RXPFrame
@@ -361,8 +361,8 @@ local function SetStepFrameAnchor()
     -- local bars = RXPFrame.BarContainer
     local function SetTop()
         frame:ClearAllPoints()
-        frame:SetPoint("BOTTOMLEFT", GuideName, "TOPLEFT", 0, 2)
-        frame:SetPoint("BOTTOMRIGHT", GuideName, "TOPRIGHT", 0, 2)
+        frame:SetPoint("BOTTOMLEFT", GuideName, "TOPLEFT", 0, 12)
+        frame:SetPoint("BOTTOMRIGHT", GuideName, "TOPRIGHT", 0, 12)
         --[[if bars then
             bars:ClearAllPoints()
             bars:SetPoint("TOPLEFT",RXPFrame,"BOTTOMLEFT",7,-5)
@@ -470,8 +470,8 @@ RXPFrame:SetFrameStrata("BACKGROUND")
 
 -- RXPFrame.CurrentStepFrame:SetBackdrop(backdrop)
 -- RXPFrame.CurrentStepFrame:SetBackdropColor(0.3,0.01,0.01)
-CurrentStepFrame:SetPoint("BOTTOMLEFT", GuideName, "TOPLEFT", 0, 2)
-CurrentStepFrame:SetPoint("BOTTOMRIGHT", GuideName, "TOPRIGHT", 0, 2)
+CurrentStepFrame:SetPoint("BOTTOMLEFT", GuideName, "TOPLEFT", 0, 12)
+CurrentStepFrame:SetPoint("BOTTOMRIGHT", GuideName, "TOPRIGHT", 0, 12)
 
 CurrentStepFrame:SetHeight(25)
 CurrentStepFrame:SetScript("OnMouseDown", RXPFrame.OnMouseDown)
@@ -1028,9 +1028,9 @@ function addon.SetStep(n, n2, loopback)
                 stepframe:SetPoint("TOPRIGHT", CurrentStepFrame, 0, 0)
             else
                 stepframe:SetPoint("TOPLEFT", CurrentStepFrame.framePool[anchor],
-                                "BOTTOMLEFT", 0, -5)
+                                "BOTTOMLEFT", 0, -12)
                 stepframe:SetPoint("TOPRIGHT", CurrentStepFrame.framePool[anchor],
-                                "BOTTOMRIGHT", 0, -5)
+                                "BOTTOMRIGHT", 0, -12)
             end
             anchor = c
             stepframe:SetMovable(false)
@@ -1038,7 +1038,7 @@ function addon.SetStep(n, n2, loopback)
         if not stepframe.number then
             stepframe.number = CreateFrame("Frame", "$parent_number", stepframe,
                                            BackdropTemplate)
-            stepframe.number:SetPoint("TOPLEFT", stepframe, 7, 5)
+            stepframe.number:SetPoint("TOPLEFT", stepframe, 10, -5)
             stepframe.number.text = stepframe.number:CreateFontString(nil,
                                                                       "OVERLAY")
             -- stepframe.number.text:SetFontObject(GameFontNormalSmall)
@@ -1063,7 +1063,7 @@ function addon.SetStep(n, n2, loopback)
 
         local titletext
         if step.sticky then
-            titletext = step.title or ""
+            titletext = fmt(L("Step %d"), index) .. " - " .. (step.title or "Along the way")
         else
             titletext = step.title or (fmt(L("Step %d"), index))
         end
@@ -1263,17 +1263,16 @@ function CurrentStepFrame.UpdateText()
                     stepframe:SetPoint("TOPRIGHT", CurrentStepFrame, 0, 0)
                 else
                     stepframe:SetPoint("TOPLEFT", CurrentStepFrame.framePool[anchor],
-                                    "BOTTOMLEFT", 0, -5)
+                                    "BOTTOMLEFT", 0, -12)
                     stepframe:SetPoint("TOPRIGHT", CurrentStepFrame.framePool[anchor],
-                                    "BOTTOMRIGHT", 0, -5)
+                                    "BOTTOMRIGHT", 0, -12)
                 end
 
                 stepframe:SetMovable(false)
                 anchor = c
             end
 
-            stepframe.number.text:SetText(step.title or
-                                            (fmt(L("Step %d"), loopStepIndex)))
+            stepframe.number.text:SetText(fmt(L("Step %d"), loopStepIndex))
             stepframe.number:SetSize(stepframe.number.text:GetStringWidth() + 10, 17)
 
             e = 0
@@ -1300,7 +1299,9 @@ function CurrentStepFrame.UpdateText()
                         elementFrame.text:ClearAllPoints()
                         elementFrame.text:SetPoint("TOPLEFT", elementFrame.button,
                                                 "TOPRIGHT", 11, -1)
-                        elementFrame.text:SetPoint("RIGHT", stepframe, -5, 0)
+                        elementFrame.text:SetPoint("RIGHT", stepframe, -12, 0)
+                        elementFrame.text:SetWordWrap(true)
+                        elementFrame.text:SetSpacing(3)
 
                          -- Prevent text from overwritten with " ", could be stale text
                         if element.text ~= ' ' then
@@ -1309,7 +1310,7 @@ function CurrentStepFrame.UpdateText()
                             element.requestFromServer = true
                         end
 
-                        h = math.ceil(elementFrame.text:GetStringHeight() * 1.1) + 1
+                        h = math.ceil(elementFrame.text:GetStringHeight()) + 6
                         -- print('sh:',h)
                         elementFrame:SetHeight(h)
                         frameHeight = frameHeight + h
@@ -1346,9 +1347,9 @@ function CurrentStepFrame.UpdateText()
                     elementFrame:ClearAllPoints()
 
                     if e == 1 then
-                        elementFrame:SetPoint("TOPLEFT", stepframe, 0, -10 + spacing)
+                        elementFrame:SetPoint("TOPLEFT", stepframe, 0, -30 + spacing)
                         elementFrame:SetPoint("TOPRIGHT", stepframe, 0,
-                                            -10 + spacing)
+                                            -30 + spacing)
                     else
                         elementFrame:SetPoint("TOPLEFT", stepframe.elements[e - 1],
                                             "BOTTOMLEFT", 0, 0 + spacing)
@@ -1379,7 +1380,7 @@ function CurrentStepFrame.UpdateText()
                     stepframe:EnableMouse(true)
                 end
                 stepframe:SetAlpha(1)
-                frameHeight = math.ceil(frameHeight + 18)
+                frameHeight = math.ceil(frameHeight + 40)
             end
 
             stepframe:SetHeight(frameHeight)
@@ -1388,11 +1389,11 @@ function CurrentStepFrame.UpdateText()
                 frameHeight = -5
             end
 
-            totalHeight = totalHeight + frameHeight + 5
+            totalHeight = totalHeight + frameHeight + 12
         end
     end
 
-    CurrentStepFrame:SetHeight(totalHeight - 5)
+    CurrentStepFrame:SetHeight(math.max(1, totalHeight - 12))
 
     if addon.comms.grouping:CanBroadcastCurrentStep() then
         addon.v2.events:Trigger("UpdateActiveSteps", activeSteps, addon.player.name)
@@ -1403,8 +1404,8 @@ BottomFrame:SetPoint("TOPLEFT", RXPFrame, 3, -3)
 BottomFrame:SetPoint("BOTTOMRIGHT", RXPFrame, -3, 14)
 
 -- GuideName:SetBackdropColor(unpack(addon.colors.background))
-GuideName:SetPoint("BOTTOMLEFT", BottomFrame, "TOPLEFT", 0, -9)
-GuideName:SetPoint("BOTTOMRIGHT", BottomFrame, "TOPRIGHT", 0, -9)
+GuideName:SetPoint("BOTTOMLEFT", BottomFrame, "TOPLEFT", 0, 8)
+GuideName:SetPoint("BOTTOMRIGHT", BottomFrame, "TOPRIGHT", 0, 8)
 GuideName:SetHeight(35)
 GuideName.text = GuideName:CreateFontString(nil, "OVERLAY")
 -- GuideName.text:SetFontObject(GameFontNormalSmall)
@@ -1505,7 +1506,7 @@ GuideName:SetScript("OnLeave", function()
     if GetTime() - buttonToggle > 0.1 then Footer.cog:Hide() end
 end)]]
 
-ScrollFrame:SetPoint("TOPLEFT", BottomFrame, 5, -5)
+ScrollFrame:SetPoint("TOPLEFT", BottomFrame, 10, -12)
 ScrollFrame:SetPoint("BOTTOMRIGHT", BottomFrame, -20, 7)
 ScrollFrame.ScrollBar:SetPoint("TOPLEFT", ScrollFrame, "TOPRIGHT", 0, -18)
 
@@ -2088,9 +2089,12 @@ function addon:LoadGuide(guide, OnLoad)
 
             frame.text:SetFontObject(_G.GameFontNormalSmall)
             frame.text:ClearAllPoints()
-            frame.text:SetPoint("TOPLEFT", frame, 0, -5)
+            frame.text:SetPoint("TOPLEFT", frame, 10, -8)
             -- Only anchor by width, the row height is is derived from text height/wrap
-            frame.text:SetPoint("RIGHT", frame.number, "LEFT", 0, 0)
+            frame.text:SetPoint("RIGHT", frame, "RIGHT", -12, 0)
+            frame.text:SetWordWrap(true)
+            frame.text:SetSpacing(4)
+            frame.number:Hide()
             frame.text:SetJustifyH("LEFT")
             frame.text:SetJustifyV("TOP")
             frame.text:SetTextColor(unpack(addon.activeTheme.textColor))
@@ -2099,7 +2103,7 @@ function addon:LoadGuide(guide, OnLoad)
 
             -- frame.text:SetHeight(1000)
 
-            -- frame.text:SetText(text)
+            -- frame.text:SetText(text and text ~= "" and (fmt("|cFFFFD100Step %d|r\n", step.index) .. text) or "")
 
             frame:SetHeight(20)
         end
@@ -2224,7 +2228,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
         end
 
         if frame.text and frame.text:GetText() ~= text then
-            frame.text:SetText(text)
+            frame.text:SetText(text and text ~= "" and (fmt("|cFFFFD100Step %d|r\n", step.index) .. text) or "")
         end
 
         if hideStep then
@@ -2233,7 +2237,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
             frame:SetAlpha(0)
         else
             frame.text:Show()
-            fheight = math.ceil(frame.text:GetStringHeight() + 8)
+            fheight = math.ceil(frame.text:GetStringHeight() + 20)
             frame:SetAlpha(1)
         end
 
@@ -2318,12 +2322,12 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
             if frame.text then
                 if hideStep then
                     --hiddenFrames = hiddenFrames + 1
-                    frame.text:SetText(text)
+                    frame.text:SetText(text and text ~= "" and (fmt("|cFFFFD100Step %d|r\n", step.index) .. text) or "")
                     fheight = 1.00
                     frame:SetAlpha(0)
                 else
-                    frame.text:SetText(text)
-                    fheight = math.ceil(frame.text:GetStringHeight() + 8)
+                    frame.text:SetText(text and text ~= "" and (fmt("|cFFFFD100Step %d|r\n", step.index) .. text) or "")
+                    fheight = math.ceil(frame.text:GetStringHeight() + 20)
                 end
             end
             step.text = text

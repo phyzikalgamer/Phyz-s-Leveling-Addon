@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.3 — 2026-11-15
+
+- Added prominent step headings instead of small corner numbers in the guide list.
+- Improved wrapped objective padding, line spacing and active-step card spacing.
+- Separated the guide header from the first row and active-step boxes.
+- Raised the default font to 12, including a one-time migration for existing profiles.
+
 ## 0.2.2 — 2026-11-15
 
 - Added optional local personal-guide companion support using the native importer.
