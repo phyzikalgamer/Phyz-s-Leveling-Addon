@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 — 2026-11-15
+
+- Fixed release packaging to include the Phyz theme and UI modules.
+- Added GitHub publishing and installable release ZIP automation.
+
 ## 0.2.0 — 2026-11-15
 
 - Rebuilt directly from RestedXP Guides v4.11.36.

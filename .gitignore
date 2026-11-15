@@ -6,5 +6,5 @@ __pycache__/
 AUDIT.md
 make_fork.py
 rebase_restedxp.py
-PhyzTheme.lua
-PhyzUI.lua
+/PhyzTheme.lua
+/PhyzUI.lua
