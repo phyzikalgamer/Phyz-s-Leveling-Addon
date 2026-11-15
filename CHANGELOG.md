@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.8 — 2026-11-15
+
+- Completed steps use grey text and a darker background, including embedded text colours.
+- Current step has a yellow border glow and warm highlight; future steps keep their existing appearance.
+- Added a Go to current step footer button to align the active step at the top of the guide viewport.
+
 ## 0.2.7 — 2026-11-15
 
 - Added a check button beside Settings to reconcile the current guide with turned-in quests.

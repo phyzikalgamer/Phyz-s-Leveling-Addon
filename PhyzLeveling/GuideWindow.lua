@@ -2028,12 +2028,14 @@ function addon:LoadGuide(guide, OnLoad)
                 if IsFrameShown(frame,self.step) then
                     self:SetAlpha(1)
                     self:SetBackdropColor(unpack(addon.colors.bottomFrameHighlight))
+                    addon.StyleGuideRow(self)
                 end
             end)
 
             frame:SetScript("OnLeave", function(self)
                 self:SetBackdropColor(unpack(addon.colors.bottomFrameBG))
                 self:SetAlpha(self.currentAlpha)
+                addon.StyleGuideRow(self)
             end)
 
             frame.timer = 0
@@ -2095,7 +2097,7 @@ function addon:LoadGuide(guide, OnLoad)
 
             -- frame.text:SetHeight(1000)
 
-            -- frame.text:SetText(text and text ~= "" and (fmt("|cFFFFD100Step %d|r\n", step.index) .. text) or "")
+            -- frame.text:SetText(addon.FormatGuideRow(frame, text))
 
             frame:SetHeight(20)
         end
@@ -2220,7 +2222,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
         end
 
         if frame.text and frame.text:GetText() ~= text then
-            frame.text:SetText(text and text ~= "" and (fmt("|cFFFFD100Step %d|r\n", step.index) .. text) or "")
+            frame.text:SetText(addon.FormatGuideRow(frame, text))
         end
 
         if hideStep then
@@ -2306,7 +2308,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
             if step.completed or (addon.IsQuestCheckedStep and addon.IsQuestCheckedStep(step, addon.currentGuide)) or
                 (not step.sticky and currentStep > step.index) or
                 PHYZ2CData.stepSkip[step.index] then
-                frame:SetAlpha(0.5)
+                frame:SetAlpha(1)
             else
                 frame:SetAlpha(1)
             end
@@ -2314,11 +2316,11 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
             if frame.text then
                 if hideStep then
                     --hiddenFrames = hiddenFrames + 1
-                    frame.text:SetText(text and text ~= "" and (fmt("|cFFFFD100Step %d|r\n", step.index) .. text) or "")
+                    frame.text:SetText(addon.FormatGuideRow(frame, text))
                     fheight = 1.00
                     frame:SetAlpha(0)
                 else
-                    frame.text:SetText(text and text ~= "" and (fmt("|cFFFFD100Step %d|r\n", step.index) .. text) or "")
+                    frame.text:SetText(addon.FormatGuideRow(frame, text))
                     fheight = math.ceil(frame.text:GetStringHeight() + 20)
                 end
             end

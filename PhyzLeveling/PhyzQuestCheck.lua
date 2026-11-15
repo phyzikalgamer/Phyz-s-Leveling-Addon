@@ -83,6 +83,6 @@ button:SetScript('OnEnter', function(self)
 end)
 button:SetScript('OnLeave', function() GameTooltip:Hide() end)
 footer.text:ClearAllPoints()
-footer.text:SetPoint('LEFT', footer, 'LEFT', 52, 1)
+footer.text:SetPoint('LEFT', footer, 'LEFT', 78, 1)
 footer.text:SetPoint('RIGHT', footer, 'RIGHT', -18, 1)
 addon.questCheckButton = button

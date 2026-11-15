@@ -2,6 +2,48 @@ local _, addon = ...
 local WHITE = 'Interface/Buttons/WHITE8X8'
 local BORDER = 'Interface/DialogFrame/UI-DialogBox-Border'
 
+local function RowState(step)
+    local current = addon.GetGuideProgress() or 1
+    if step.completed or (addon.IsQuestCheckedStep and addon.IsQuestCheckedStep(step))
+        or (PHYZ2CData and PHYZ2CData.stepSkip and PHYZ2CData.stepSkip[step.index])
+        or (not step.sticky and step.index < current) then return 'done' end
+    return step.index == current and 'current' or 'future'
+end
+
+function addon.StyleGuideRow(frame)
+    if not frame.step then return end
+    local state = RowState(frame.step)
+    if not frame.phyzGlow then
+        local glow = CreateFrame('Frame', nil, frame, 'BackdropTemplate')
+        glow:SetPoint('TOPLEFT', -2, 2)
+        glow:SetPoint('BOTTOMRIGHT', 2, -2)
+        glow:SetBackdrop({edgeFile = 'Interface/Tooltips/UI-Tooltip-Border', edgeSize = 12})
+        glow:SetBackdropBorderColor(1, 0.82, 0, 0.95)
+        glow:EnableMouse(false)
+        frame.phyzGlow = glow
+    end
+    frame.phyzGlow:SetShown(state == 'current')
+    if state == 'done' then
+        frame:SetBackdropColor(0.025, 0.022, 0.018, 1)
+    elseif state == 'current' then
+        frame:SetBackdropColor(0.20, 0.14, 0.025, 1)
+    else
+        frame:SetBackdropColor(unpack(addon.colors.bottomFrameBG))
+    end
+end
+
+function addon.FormatGuideRow(frame, text)
+    addon.StyleGuideRow(frame)
+    if not text or text == '' then return '' end
+    local title = string.format('Step %d', frame.step.index)
+    if RowState(frame.step) == 'done' then
+        -- Embedded NPC/item colour codes otherwise override the grey font colour.
+        text = text:gsub('|c%x%x%x%x%x%x%x%x', ''):gsub('|r', '')
+        return '|cFF888888' .. title .. '\n' .. text .. '|r'
+    end
+    return '|cFFFFD100' .. title .. '|r\n' .. text
+end
+
 local function Skin()
     if not addon.activeTheme or addon.activeTheme.name ~= 'WoW Classic' then return end
     if addon.v2 and addon.v2:IsGuideWindowEnabled() then return end
@@ -42,6 +84,26 @@ hooksecurefunc(addon, 'SetupGuideWindow', Skin)
 hooksecurefunc(addon.RXPFrame, 'UpdateVisuals', Skin)
 hooksecurefunc(addon, 'RenderFrame', Skin)
 hooksecurefunc(addon, 'UpdateGuideFontSize', Skin)
+
+local footer = addon.RXPFrame.Footer
+local currentButton = CreateFrame('Button', nil, footer)
+currentButton:SetSize(20, 20)
+currentButton:SetPoint('LEFT', footer.cog, 'RIGHT', 30, 0)
+currentButton:SetNormalTexture('Interface/Buttons/UI-SpellbookIcon-NextPage-Up')
+currentButton:SetHighlightTexture('Interface/Buttons/ButtonHilight-Square', 'ADD')
+currentButton:SetScript('OnClick', function()
+    if addon.currentGuide then
+        addon.RXPFrame.BottomFrame.UpdateFrame()
+        addon.RXPFrame.BottomFrame:StepScroll(addon.GetGuideProgress())
+    end
+end)
+currentButton:SetScript('OnEnter', function(self)
+    GameTooltip:SetOwner(self, 'ANCHOR_TOP')
+    GameTooltip:SetText('Go to current step', 1, 0.82, 0)
+    GameTooltip:AddLine('Align the current step with the top of the guide window.', 1, 1, 1, true)
+    GameTooltip:Show()
+end)
+currentButton:SetScript('OnLeave', function() GameTooltip:Hide() end)
 
 function addon.UpdateActiveStepVisibility()
     local p = addon.settings and addon.settings.profile
