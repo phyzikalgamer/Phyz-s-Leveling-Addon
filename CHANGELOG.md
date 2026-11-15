@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.5 — 2026-11-15
+
+- Reduced the quest header icon to 20px and removed its overlapping class badge.
+- Reduced the guide title font to 11 and added padding and line spacing in a taller header.
+
 ## 0.2.4 — 2026-11-15
 
 - Added a saved “Show active-step boxes” setting under Guide Window, off by default.

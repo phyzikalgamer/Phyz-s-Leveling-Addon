@@ -22,13 +22,26 @@ local function Skin()
     end
     if frame.GuideName.icon then
         frame.GuideName.icon:SetTexture('Interface/GossipFrame/AvailableQuestIcon')
+        frame.GuideName.icon:ClearAllPoints()
+        frame.GuideName.icon:SetPoint('LEFT', frame.GuideName, 'LEFT', 10, 0)
+        frame.GuideName.icon:SetSize(20, 20)
     end
+    -- Keep the two-line guide title clear of the icon and border.
+    frame.GuideName:SetHeight(44)
+    frame.GuideName.text:ClearAllPoints()
+    frame.GuideName.text:SetPoint('TOPLEFT', frame.GuideName, 'TOPLEFT', 42, -7)
+    frame.GuideName.text:SetPoint('BOTTOMRIGHT', frame.GuideName, 'BOTTOMRIGHT', -12, 7)
+    frame.GuideName.text:SetFont(addon.font, 11, '')
+    frame.GuideName.text:SetSpacing(2)
+    frame.GuideName.text:SetWordWrap(true)
+    frame.GuideName.classIcon:Hide()
 end
 
 -- Run after upstream refreshes so its banner never covers the native colours.
 hooksecurefunc(addon, 'SetupGuideWindow', Skin)
 hooksecurefunc(addon.RXPFrame, 'UpdateVisuals', Skin)
 hooksecurefunc(addon, 'RenderFrame', Skin)
+hooksecurefunc(addon, 'UpdateGuideFontSize', Skin)
 
 function addon.UpdateActiveStepVisibility()
     local p = addon.settings and addon.settings.profile
