@@ -30,6 +30,25 @@ hooksecurefunc(addon, 'SetupGuideWindow', Skin)
 hooksecurefunc(addon.RXPFrame, 'UpdateVisuals', Skin)
 hooksecurefunc(addon, 'RenderFrame', Skin)
 
+function addon.UpdateActiveStepVisibility()
+    local p = addon.settings and addon.settings.profile
+    local current = addon.RXPFrame.CurrentStepFrame
+    if not p or not p.showActiveStepBoxes then
+        current:Hide()
+    elseif addon.currentGuide and not addon.v2:IsGuideWindowEnabled() then
+        -- Also undo the temporary alpha command offered before this setting.
+        current:SetAlpha(1)
+        current.UpdateText()
+    end
+end
+
+-- The engine refreshes these frames as quests change. Hide the presentation
+-- while allowing its step processing, quest detection and navigation to run.
+addon.RXPFrame.CurrentStepFrame:HookScript('OnShow', function(self)
+    local p = addon.settings and addon.settings.profile
+    if p and not p.showActiveStepBoxes then self:Hide() end
+end)
+
 -- Apply the readability defaults once to existing profiles as well as new ones.
 -- Later font choices remain under the player's control.
 hooksecurefunc(addon.settings, 'InitializeDatabase', function()
@@ -38,4 +57,5 @@ hooksecurefunc(addon.settings, 'InitializeDatabase', function()
         p.guideFontSize = math.max(p.guideFontSize or 9, 12)
         p.phyzReadableLayout = true
     end
+    addon.UpdateActiveStepVisibility()
 end)

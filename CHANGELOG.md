@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.4 — 2026-11-15
+
+- Added a saved “Show active-step boxes” setting under Guide Window, off by default.
+- Hiding the boxes leaves the main guide list, step logic and navigation running.
+- Re-enabling restores boxes immediately, including after a temporary alpha command.
+
 ## 0.2.3 — 2026-11-15
 
 - Added prominent step headings instead of small corner numbers in the guide list.

@@ -148,6 +148,7 @@ local settingsDBDefaults = {
         enableGossipAutomation = true,
         showUnusedGuides = true,
         anchorOrientation = "top",
+        showActiveStepBoxes = false,
         chromieTime = "auto",
         enableXpStepSkipping = true,
         enableAutomaticXpRate = true,
@@ -3058,6 +3059,19 @@ function addon.settings:CreateAceOptionsPanel()
                             SetProfileOption(info, value)
                             _G.ReloadUI()
                         end
+                    },
+                    showActiveStepBoxes = {
+                        name = "Show active-step boxes",
+                        desc = "Show the separate boxes containing current and ongoing steps. The main guide list stays visible when these are hidden.",
+                        type = "toggle",
+                        width = optionsWidth,
+                        order = 3.25,
+                        hidden = function() return addon.v2:IsGuideWindowEnabled() end,
+                        get = function() return self.profile.showActiveStepBoxes end,
+                        set = function(_, value)
+                            self.profile.showActiveStepBoxes = value
+                            addon.UpdateActiveStepVisibility()
+                        end,
                     },
                     anchorOrientation = {
                         name = L("Current step frame anchor"),
