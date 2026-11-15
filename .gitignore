@@ -1,0 +1,10 @@
+backups/
+dist/
+__pycache__/
+*.pyc
+# Historical OpenXP development files retained locally only.
+AUDIT.md
+make_fork.py
+rebase_restedxp.py
+PhyzTheme.lua
+PhyzUI.lua

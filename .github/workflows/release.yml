@@ -1,0 +1,25 @@
+name: Release addon
+on:
+  push:
+    tags:
+      - 'v*'
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check version and build installable ZIP
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python -c "import os,pathlib,re; v=re.search(r'^## Version:\s*(\S+)',pathlib.Path('PhyzLeveling/PhyzLeveling.toc').read_text(),re.M)[1]; assert os.environ['RELEASE_TAG']=='v'+v, 'Tag and addon version differ'"
+          python tools/package.py
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/*.zip --title "Phyz Leveling Addon $GITHUB_REF_NAME" --notes-file CHANGELOG.md --verify-tag
