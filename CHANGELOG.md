@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.7 — 2026-11-15
+
+- Added a check button beside Settings to reconcile the current guide with turned-in quests.
+- Saves completion per character and guide, with signatures to avoid skipping changed quest instructions.
+- Advances past checked quest steps and dims them in the list; retains mixed and unfinished actions.
+- Reports newly marked and total checked steps without modifying the quest log.
+
 ## 0.2.6 — 2026-11-15
 
 - Align the current step's top edge with the guide viewport when advancing.

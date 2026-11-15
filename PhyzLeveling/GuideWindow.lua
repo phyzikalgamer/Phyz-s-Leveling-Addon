@@ -867,7 +867,7 @@ function addon.SetStep(n, n2, loopback)
     local step = guide.steps[n]
     local req = step.requires and guide.labels[step.requires] and
                     guide.steps[guide.labels[step.requires]]
-    if step.completed and n < #guide.steps then
+    if (step.completed or (addon.IsQuestCheckedStep and addon.IsQuestCheckedStep(step, guide))) and n < #guide.steps then
         return addon.SetStep(n + 1)
     elseif step and not step.completed and
         not (req and #activeSteps > 0 and (req.active or not (req.reqFulfilled))) and
@@ -2303,7 +2303,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
                 step.hiddentext = text
                 text = ""
             end
-            if step.completed or
+            if step.completed or (addon.IsQuestCheckedStep and addon.IsQuestCheckedStep(step, addon.currentGuide)) or
                 (not step.sticky and currentStep > step.index) or
                 PHYZ2CData.stepSkip[step.index] then
                 frame:SetAlpha(0.5)
