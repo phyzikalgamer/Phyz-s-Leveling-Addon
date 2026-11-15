@@ -3,7 +3,7 @@
 ## Title-zhCN: Phyz Leveling Addon
 ## Notes: RestedXP-based leveling with a classic WoW interface.
 ## Author: Phyz; based on RestedXP
-## Version: 0.2.1
+## Version: 0.2.2
 ## Category: Quests
 ## Category-deDE: Quests
 ## Category-esES: Misiones
@@ -15,7 +15,7 @@
 ## Category-ruRU: Задания
 ## Category-zhCN: 任务
 ## Category-zhTW: 任務
-## OptionalDeps: Questie
+## OptionalDeps: Questie, PhyzPersonalGuides
 ## SavedVariables: PHYZ2Data, PHYZ2DB, PHYZ2Settings, PHYZ2String
 ## SavedVariablesPerCharacter: PHYZ2CData, PHYZ2CTrackingData, PHYZ2CComms, PHYZ2CSettings
 
@@ -25,6 +25,7 @@ locale\locales.xml
 UI\includes.xml
 
 Locale.lua
+PhyzPersonalLoader.lua
 Themes.lua
 PhyzTheme.lua
 Communications.lua

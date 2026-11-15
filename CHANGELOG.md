@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2 — 2026-11-15
+
+- Added optional local personal-guide companion support using the native importer.
+- Personal guide payloads remain outside this repository and release ZIPs.
+
 ## 0.2.1 — 2026-11-15
 
 - Fixed release packaging to include the Phyz theme and UI modules.

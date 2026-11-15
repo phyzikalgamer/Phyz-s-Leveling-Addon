@@ -7,6 +7,8 @@ Do not request permission again unless a tool requires escalation or scope chang
 
 - Active source is PhyzLeveling/. This is a direct RestedXP fork, not OpenXP.
 - Preserve upstream licenses/credits. Never commit backups, credentials or WTF data.
+- Personal guide imports live in the ignored backups/ tree and the separate local
+  PhyzPersonalGuides addon. Never publish those guide payloads in commits or releases.
 - For each completed update, bump PhyzLeveling.toc's Version and add CHANGELOG.md notes.
 - Run `python tools/package.py` to validate file references and produce the release ZIP.
 - Install the current source into

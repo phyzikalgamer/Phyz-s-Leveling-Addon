@@ -1,8 +1,11 @@
-# Phyz Leveling Addon 0.2.0
+# Phyz Leveling Addon 0.2.2
 
 Direct fork of installed RestedXP Guides v4.11.36, with a classic WoW theme.
 Uses RestedXP's own guide window, step engine, map pins and waypoint arrow.
 No OpenXP Smart Start, card, terrain routing or custom 21-60 routes are loaded.
+An optional local PhyzPersonalGuides companion can supply an encrypted personal
+import through the original importer. Personal packs are not included in public
+releases and retain the native account checks. Enable both addons when using one.
 Forever's bundled leveling routes cover the early levels (roughly 1-20/22),
 plus other bundled guides. A complete Forever 1-60 pack is not included.
 
