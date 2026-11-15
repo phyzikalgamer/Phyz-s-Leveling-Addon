@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.6 — 2026-11-15
+
+- Align the current step's top edge with the guide viewport when advancing.
+- Use actual row positions to avoid scrolling drift with wrapped text.
+- Allow the last steps to align at the top as well.
+
 ## 0.2.5 — 2026-11-15
 
 - Reduced the quest header icon to 20px and removed its overlapping class badge.

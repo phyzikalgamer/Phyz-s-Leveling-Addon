@@ -435,25 +435,17 @@ local lastScrollValue
 function BottomFrame:StepScroll(n)
     if addon.v2:IsGuideWindowEnabled() then return end
 
-    local value
-    local step = addon.currentGuide.steps[n]
-    if not step or not IsFrameShown(nil,step) then
-         return
-    end
-    --[[for i, v in ipairs(BottomFrame.stepList) do
-        if v == n then
-            n = i
-            break
-        end
-    end]]
-    local height = ScrollChild.f1:GetHeight()
-    if n == 1 or not (stepPos[n] and stepPos[0] and height) then
-        value = 0
-    else
-        value = stepPos[n] / stepPos[0] * height - 2
-        local smax = height - BottomFrame:GetHeight() + 10
-        if value > smax then value = smax end
-    end
+    -- Use the row's real top edge, not a percentage of accumulated heights.
+    -- The latter drifts as objectives wrap or change their height.
+    n = addon.GetGuideProgress() or n
+    local step = addon.currentGuide and addon.currentGuide.steps[n]
+    local row = ScrollChild.framePool[n]
+    if not step or not row or not IsFrameShown(nil, step) then return end
+    local top, rowTop = ScrollChild:GetTop(), row:GetTop()
+    if not top or not rowTop then return end
+    local value = math.max(0, top - rowTop)
+    local maximum = math.max(0, ScrollChild:GetHeight() - ScrollFrame:GetHeight())
+    ScrollFrame.ScrollBar:SetMinMaxValues(0, math.max(maximum, value))
     ScrollFrame.ScrollBar:SetValue(value)
 
     value = math.floor(value+0.5)
@@ -1527,12 +1519,12 @@ function RXPFrame.UpdateScrollBar()
 end
 
 hooksecurefunc(ScrollFrame.ScrollBar, "SetValue", function(self, value)
-    local h = math.floor(ScrollChild:GetHeight() + 10)
-    local scroll = h - BottomFrame:GetHeight()
+    local scroll = math.max(0, ScrollChild:GetHeight() - ScrollFrame:GetHeight())
     local currentStep = addon.GetGuideProgress()
-    local index = currentStep > 1 and stepPos[currentStep - 1]
-    local zero = addon.settings.profile.hideCompletedSteps and index and
-                     index + currentStep or 0
+    local row = ScrollChild.framePool[currentStep]
+    local top, rowTop = ScrollChild:GetTop(), row and row:GetTop()
+    local zero = addon.settings.profile.hideCompletedSteps and top and rowTop
+        and math.max(0, top - rowTop) or 0
     if scroll < zero then scroll = zero end
     if scroll <= value then ScrollFrame.ScrollBar.ScrollDownButton:Disable() end
     ScrollFrame.ScrollBar:SetMinMaxValues(zero, scroll)
@@ -2355,8 +2347,9 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
     local guide = addon.currentGuide
 
     if guide then
-        ScrollChild:SetHeight(ScrollChild.f1:GetHeight() -
-                                  (BottomFrame.hiddenFrames or 1) * 4)
+        -- Extra scroll space lets even the final step sit at the top.
+        ScrollChild:SetHeight(math.max(1, ScrollChild.f1:GetHeight() -
+                                  (BottomFrame.hiddenFrames or 1) * 4) + ScrollFrame:GetHeight())
     end
 
     local w = RXPFrame:GetWidth() - 35
