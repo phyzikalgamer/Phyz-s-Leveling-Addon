@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.11 — 2026-11-15
+
+- Replaced the active-step border artwork with a simple one-pixel yellow outline.
+
 ## 0.2.10 — 2026-11-15
 
 - Added small zone and coordinate captions from each step's guide waypoint when available.

@@ -14,27 +14,22 @@ function addon.StyleGuideRow(frame)
     if not frame.step then return end
     local state = RowState(frame.step)
     if not frame.phyzGlow then
-        -- Use the original rounded Blizzard border art as clipped row textures.
+        -- Four plain one-pixel edges, inset and clipped with the row textures.
         local textures = {}
-        local parts = {
-            {'TOPLEFT', 'BOTTOMLEFT', 2, -8, 2, 8, 8, nil},
-            {'TOPRIGHT', 'BOTTOMRIGHT', -2, -8, -2, 8, 8, nil},
-            {'TOPLEFT', 'TOPRIGHT', 8, -2, -8, -2, nil, 8},
-            {'BOTTOMLEFT', 'BOTTOMRIGHT', 8, 2, -8, 2, nil, 8},
-            {'TOPLEFT', nil, 2, -2, nil, nil, 8, 8},
-            {'TOPRIGHT', nil, -2, -2, nil, nil, 8, 8},
-            {'BOTTOMLEFT', nil, 2, 2, nil, nil, 8, 8},
-            {'BOTTOMRIGHT', nil, -2, 2, nil, nil, 8, 8},
-        }
-        for i, part in ipairs(parts) do
+        for _, edge in ipairs({'TOP', 'BOTTOM', 'LEFT', 'RIGHT'}) do
             local texture = frame:CreateTexture(nil, 'OVERLAY')
-            texture:SetTexture('Interface/Tooltips/UI-Tooltip-Border')
-            texture:SetTexCoord((i - 1) / 8, i / 8, 0, 1)
-            texture:SetVertexColor(1, 0.82, 0, 0.8)
-            texture:SetPoint(part[1], frame, part[1], part[3], part[4])
-            if part[2] then texture:SetPoint(part[2], frame, part[2], part[5], part[6]) end
-            if part[7] then texture:SetWidth(part[7]) end
-            if part[8] then texture:SetHeight(part[8]) end
+            texture:SetColorTexture(1, 0.82, 0, 1)
+            if edge == 'TOP' or edge == 'BOTTOM' then
+                local y = edge == 'TOP' and -2 or 2
+                texture:SetPoint(edge .. 'LEFT', frame, edge .. 'LEFT', 2, y)
+                texture:SetPoint(edge .. 'RIGHT', frame, edge .. 'RIGHT', -2, y)
+                texture:SetHeight(1)
+            else
+                local x = edge == 'LEFT' and 2 or -2
+                texture:SetPoint('TOP' .. edge, frame, 'TOP' .. edge, x, -2)
+                texture:SetPoint('BOTTOM' .. edge, frame, 'BOTTOM' .. edge, x, 2)
+                texture:SetWidth(1)
+            end
             textures[#textures + 1] = texture
         end
         frame.phyzGlow = {SetShown = function(_, shown)
