@@ -1531,7 +1531,7 @@ hooksecurefunc(ScrollFrame.ScrollBar, "SetValue", function(self, value)
 end)
 
 ScrollChild.framePool = {}
-ScrollChild:SetWidth(RXPFrame:GetWidth() - 35)
+ScrollChild:SetWidth(math.max(1, ScrollFrame:GetWidth() - 4))
 
 ScrollFrame:SetScrollChild(ScrollChild)
 
@@ -2231,7 +2231,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
             frame:SetAlpha(0)
         else
             frame.text:Show()
-            fheight = math.ceil(frame.text:GetStringHeight() + 20)
+            fheight = math.ceil(frame.text:GetStringHeight() + 20 + (frame.phyzLocation and frame.phyzLocation:IsShown() and 16 or 0))
             frame:SetAlpha(1)
         end
 
@@ -2321,7 +2321,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
                     frame:SetAlpha(0)
                 else
                     frame.text:SetText(addon.FormatGuideRow(frame, text))
-                    fheight = math.ceil(frame.text:GetStringHeight() + 20)
+                    fheight = math.ceil(frame.text:GetStringHeight() + 20 + (frame.phyzLocation and frame.phyzLocation:IsShown() and 16 or 0))
                 end
             end
             step.text = text
@@ -2354,7 +2354,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
                                   (BottomFrame.hiddenFrames or 1) * 4) + ScrollFrame:GetHeight())
     end
 
-    local w = RXPFrame:GetWidth() - 35
+    local w = math.max(1, ScrollFrame:GetWidth() - 4)
     ScrollChild:SetWidth(w)
     local bottomFrameHeight = BottomFrame:GetHeight()
 

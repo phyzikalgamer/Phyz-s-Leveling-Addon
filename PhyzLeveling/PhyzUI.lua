@@ -14,27 +14,28 @@ function addon.StyleGuideRow(frame)
     if not frame.step then return end
     local state = RowState(frame.step)
     if not frame.phyzGlow then
-        -- ScrollFrames clip row textures, but separate child frames can escape
-        -- the viewport. Draw an inset texture border so the scrollbar is intact.
+        -- Use the original rounded Blizzard border art as clipped row textures.
         local textures = {}
-        for _, edge in ipairs({'TOP', 'BOTTOM', 'LEFT', 'RIGHT'}) do
-            for layer = 1, 2 do
-                local texture = frame:CreateTexture(nil, 'OVERLAY')
-                texture:SetColorTexture(1, 0.82, 0, layer == 1 and 0.18 or 0.9)
-                local thickness = layer == 1 and 4 or 1
-                if edge == 'TOP' or edge == 'BOTTOM' then
-                    local y = edge == 'TOP' and -2 or 2
-                    texture:SetPoint(edge .. 'LEFT', frame, edge .. 'LEFT', 2, y)
-                    texture:SetPoint(edge .. 'RIGHT', frame, edge .. 'RIGHT', -2, y)
-                    texture:SetHeight(thickness)
-                else
-                    local x = edge == 'LEFT' and 2 or -2
-                    texture:SetPoint('TOP' .. edge, frame, 'TOP' .. edge, x, -2)
-                    texture:SetPoint('BOTTOM' .. edge, frame, 'BOTTOM' .. edge, x, 2)
-                    texture:SetWidth(thickness)
-                end
-                textures[#textures + 1] = texture
-            end
+        local parts = {
+            {'TOPLEFT', 'BOTTOMLEFT', 2, -8, 2, 8, 8, nil},
+            {'TOPRIGHT', 'BOTTOMRIGHT', -2, -8, -2, 8, 8, nil},
+            {'TOPLEFT', 'TOPRIGHT', 8, -2, -8, -2, nil, 8},
+            {'BOTTOMLEFT', 'BOTTOMRIGHT', 8, 2, -8, 2, nil, 8},
+            {'TOPLEFT', nil, 2, -2, nil, nil, 8, 8},
+            {'TOPRIGHT', nil, -2, -2, nil, nil, 8, 8},
+            {'BOTTOMLEFT', nil, 2, 2, nil, nil, 8, 8},
+            {'BOTTOMRIGHT', nil, -2, 2, nil, nil, 8, 8},
+        }
+        for i, part in ipairs(parts) do
+            local texture = frame:CreateTexture(nil, 'OVERLAY')
+            texture:SetTexture('Interface/Tooltips/UI-Tooltip-Border')
+            texture:SetTexCoord((i - 1) / 8, i / 8, 0, 1)
+            texture:SetVertexColor(1, 0.82, 0, 0.8)
+            texture:SetPoint(part[1], frame, part[1], part[3], part[4])
+            if part[2] then texture:SetPoint(part[2], frame, part[2], part[5], part[6]) end
+            if part[7] then texture:SetWidth(part[7]) end
+            if part[8] then texture:SetHeight(part[8]) end
+            textures[#textures + 1] = texture
         end
         frame.phyzGlow = {SetShown = function(_, shown)
             for _, texture in ipairs(textures) do texture:SetShown(shown) end
@@ -50,8 +51,32 @@ function addon.StyleGuideRow(frame)
     end
 end
 
+local function StepLocation(step)
+    for _, e in ipairs(step.elements or {}) do
+        local map, x, y = tonumber(e.zone), tonumber(e.x), tonumber(e.y)
+        if e.tag == 'goto' and map and x and y and x >= 0 and x <= 100 and y >= 0 and y <= 100 then
+            local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(map)
+            if info and info.name then
+                return string.format('%s - %.1f, %.1f', info.name, x, y)
+            end
+        end
+    end
+end
+
 function addon.FormatGuideRow(frame, text)
     addon.StyleGuideRow(frame)
+    if not frame.phyzLocation then
+        frame.phyzLocation = frame:CreateFontString(nil, 'OVERLAY')
+        frame.phyzLocation:SetPoint('BOTTOMLEFT', frame, 'BOTTOMLEFT', 10, 7)
+        frame.phyzLocation:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -12, 7)
+        frame.phyzLocation:SetFont(addon.font, 10, '')
+        frame.phyzLocation:SetTextColor(0.62, 0.60, 0.52)
+        frame.phyzLocation:SetJustifyH('LEFT')
+        frame.phyzLocation:SetWordWrap(false)
+    end
+    local location = text and text ~= '' and StepLocation(frame.step)
+    frame.phyzLocation:SetText(location or '')
+    frame.phyzLocation:SetShown(location ~= nil and location ~= false)
     if not text or text == '' then return '' end
     local title = string.format('Step %d', frame.step.index)
     if RowState(frame.step) == 'done' then

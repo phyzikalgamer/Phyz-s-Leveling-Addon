@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.10 — 2026-11-15
+
+- Added small zone and coordinate captions from each step's guide waypoint when available.
+- Restored softer rounded border artwork while retaining scroll clipping.
+- Matched row width to the viewport so both sides of the highlight have equal clearance.
+
 ## 0.2.9 — 2026-11-15
 
 - Inset the active-step border and clip child highlights to the guide viewport.
