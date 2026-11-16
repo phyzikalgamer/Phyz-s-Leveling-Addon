@@ -82,39 +82,127 @@ function addon.FormatGuideRow(frame, text)
     return '|cFFFFD100' .. title .. '|r\n' .. text
 end
 
+local function RedButton(button, label)
+    button:SetNormalTexture('Interface/Buttons/UI-Panel-Button-Up')
+    button:SetPushedTexture('Interface/Buttons/UI-Panel-Button-Down')
+    button:SetHighlightTexture('Interface/Buttons/UI-Panel-Button-Highlight', 'ADD')
+    for _, texture in ipairs({button:GetNormalTexture(), button:GetPushedTexture(), button:GetHighlightTexture()}) do
+        texture:SetTexCoord(0, 0.625, 0, 0.6875)
+    end
+    if not button.phyzLabel then
+        button.phyzLabel = button:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
+        button.phyzLabel:SetPoint('CENTER', 0, 1)
+    end
+    button.phyzLabel:SetText(label)
+    button.phyzLabel:SetTextColor(1, 0.82, 0)
+end
+
 local function Skin()
     if not addon.activeTheme or addon.activeTheme.name ~= 'WoW Classic' then return end
     if addon.v2 and addon.v2:IsGuideWindowEnabled() then return end
     local frame = addon.RXPFrame
     if not frame or not frame.BottomFrame then return end
-    frame.BottomFrame:SetBackdrop({
-        bgFile = WHITE, edgeFile = BORDER, edgeSize = 20,
-        insets = {left = 5, right = 5, top = 5, bottom = 5},
+    local header, footer, body = frame.GuideName, frame.Footer, frame.BottomFrame
+    frame:SetBackdrop({
+        bgFile = 'Interface/DialogFrame/UI-DialogBox-Background',
+        edgeFile = BORDER, tile = true, tileSize = 32, edgeSize = 24,
+        insets = {left = 6, right = 6, top = 6, bottom = 6},
     })
-    frame.BottomFrame:SetBackdropColor(0.055, 0.045, 0.025, 1)
-    frame.BottomFrame:SetBackdropBorderColor(0.7, 0.6, 0.38, 1)
-    for _, panel in ipairs({frame.GuideName, frame.Footer}) do
-        if panel.bg then
-            panel.bg:SetTexture(WHITE)
-            panel.bg:SetVertexColor(0.13, 0.085, 0.025, 1)
+    frame:SetBackdropColor(0.65, 0.58, 0.42, 1)
+    frame:SetBackdropBorderColor(0.82, 0.66, 0.36, 1)
+    header:ClearAllPoints()
+    header:SetPoint('TOPLEFT', frame, 'TOPLEFT', 8, -7)
+    header:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -8, -7)
+    header:SetHeight(43)
+    header:SetBackdrop({bgFile = WHITE})
+    header:SetBackdropColor(0.12, 0.075, 0.025, 1)
+    header.bg:SetTexture(WHITE)
+    header.bg:SetVertexColor(0.12, 0.075, 0.025, 1)
+    header.text:ClearAllPoints()
+    header.text:SetPoint('TOPLEFT', header, 'TOPLEFT', 68, -6)
+    header.text:SetPoint('BOTTOMRIGHT', header, 'BOTTOMRIGHT', -32, 6)
+    header.text:SetFont(addon.font, 11, '')
+    header.text:SetSpacing(2)
+    header.text:SetWordWrap(true)
+    header.text:SetTextColor(1, 0.82, 0)
+    header.classIcon:Hide()
+    if not frame.phyzClose then
+        frame.phyzClose = CreateFrame('Button', nil, frame, 'UIPanelCloseButton')
+        frame.phyzClose:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -3, -3)
+        frame.phyzClose:SetSize(28, 28)
+        frame.phyzClose:SetScript('OnClick', addon.settings.ToggleActive)
+    end
+    -- A round quest portrait, modelled on the profession-window medallion.
+    header.icon:ClearAllPoints()
+    header.icon:SetPoint('CENTER', header, 'LEFT', 24, -5)
+    header.icon:SetSize(48, 48)
+    header.icon:SetTexture('Interface/Icons/INV_Misc_Map_01')
+    if not header.phyzPortraitRing then
+        if header.icon.AddMaskTexture then
+            local mask = header:CreateMaskTexture()
+            mask:SetAllPoints(header.icon)
+            mask:SetTexture('Interface/CharacterFrame/TempPortraitAlphaMask')
+            header.icon:AddMaskTexture(mask)
+            header.phyzPortraitMask = mask
         end
-        if panel.text then panel.text:SetTextColor(1, 0.82, 0) end
+        header.phyzPortraitRing = header:CreateTexture(nil, 'OVERLAY')
+        header.phyzPortraitRing:SetTexture('Interface/Minimap/MiniMap-TrackingBorder')
+        header.phyzPortraitRing:SetSize(78, 78)
+        header.phyzPortraitRing:SetPoint('TOPLEFT', header.icon, 'TOPLEFT', -7, 7)
     end
-    if frame.GuideName.icon then
-        frame.GuideName.icon:SetTexture('Interface/GossipFrame/AvailableQuestIcon')
-        frame.GuideName.icon:ClearAllPoints()
-        frame.GuideName.icon:SetPoint('LEFT', frame.GuideName, 'LEFT', 10, 0)
-        frame.GuideName.icon:SetSize(20, 20)
+    if not frame.phyzProgress then
+        local progress = CreateFrame('StatusBar', nil, frame, 'BackdropTemplate')
+        progress:SetStatusBarTexture('Interface/TargetingFrame/UI-StatusBar')
+        progress:SetStatusBarColor(0.12, 0.55, 0.18)
+        progress:SetBackdrop({bgFile = WHITE, edgeFile = 'Interface/Tooltips/UI-Tooltip-Border', edgeSize = 8})
+        progress:SetBackdropColor(0.025, 0.025, 0.02, 1)
+        progress:SetBackdropBorderColor(0.6, 0.48, 0.24, 1)
+        progress.label = progress:CreateFontString(nil, 'OVERLAY', 'GameFontHighlightSmall')
+        progress.label:SetPoint('CENTER')
+        frame.phyzProgress = progress
     end
-    -- Keep the two-line guide title clear of the icon and border.
-    frame.GuideName:SetHeight(44)
-    frame.GuideName.text:ClearAllPoints()
-    frame.GuideName.text:SetPoint('TOPLEFT', frame.GuideName, 'TOPLEFT', 42, -7)
-    frame.GuideName.text:SetPoint('BOTTOMRIGHT', frame.GuideName, 'BOTTOMRIGHT', -12, 7)
-    frame.GuideName.text:SetFont(addon.font, 11, '')
-    frame.GuideName.text:SetSpacing(2)
-    frame.GuideName.text:SetWordWrap(true)
-    frame.GuideName.classIcon:Hide()
+    local progress = frame.phyzProgress
+    progress:ClearAllPoints()
+    progress:SetPoint('TOPLEFT', frame, 'TOPLEFT', 78, -53)
+    progress:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -18, -53)
+    progress:SetHeight(14)
+    local total = addon.currentGuide and #addon.currentGuide.steps or 0
+    local current = total > 0 and math.min(addon.GetGuideProgress() or 1, total) or 0
+    progress:SetMinMaxValues(0, math.max(total, 1))
+    progress:SetValue(math.max(0, current - 1))
+    progress.label:SetText(total > 0 and string.format('STEP %d / %d', current, total) or 'Choose a guide')
+    body:ClearAllPoints()
+    body:SetPoint('TOPLEFT', frame, 'TOPLEFT', 9, -78)
+    body:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -9, 39)
+    body:SetBackdrop({
+        bgFile = 'Interface/DialogFrame/UI-DialogBox-Background',
+        edgeFile = 'Interface/Tooltips/UI-Tooltip-Border', tile = true, tileSize = 32, edgeSize = 8,
+        insets = {left = 2, right = 2, top = 2, bottom = 2},
+    })
+    body:SetBackdropColor(0.45, 0.45, 0.42, 1)
+    body:SetBackdropBorderColor(0.45, 0.36, 0.19, 1)
+    footer:ClearAllPoints()
+    footer:SetPoint('BOTTOMLEFT', frame, 'BOTTOMLEFT', 9, 9)
+    footer:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -9, 9)
+    footer:SetHeight(25)
+    footer:SetBackdrop({bgFile = WHITE})
+    footer:SetBackdropColor(0.10, 0.09, 0.065, 1)
+    footer.bg:SetTexture(WHITE)
+    footer.bg:SetVertexColor(0.10, 0.09, 0.065, 1)
+    footer.text:Hide()
+    footer.cog:SetParent(footer)
+    local buttons = {footer.cog, addon.phyzCurrentButton, addon.questCheckButton}
+    local labels = {'Settings', 'My step', 'Check quests'}
+    local width = math.max(50, (frame:GetWidth() - 46) / 3)
+    for i, button in ipairs(buttons) do
+        RedButton(button, labels[i])
+        button:ClearAllPoints()
+        button:SetPoint('LEFT', footer, 'LEFT', 4 + (i - 1) * (width + 7), 0)
+        button:SetSize(width, 23)
+        button:SetFrameLevel(footer:GetFrameLevel() + 2)
+    end
+    footer.icon:ClearAllPoints()
+    footer.icon:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -2, 2)
 end
 
 -- Run after upstream refreshes so its banner never covers the native colours.
@@ -122,6 +210,28 @@ hooksecurefunc(addon, 'SetupGuideWindow', Skin)
 hooksecurefunc(addon.RXPFrame, 'UpdateVisuals', Skin)
 hooksecurefunc(addon, 'RenderFrame', Skin)
 hooksecurefunc(addon, 'UpdateGuideFontSize', Skin)
+
+local function SkinTargets()
+    if InCombatLockdown() then return end
+    if addon.settings.profile.hideActiveTargetsBackground then return end
+    local target = addon.targeting and addon.targeting.activeTargetFrame
+    if not target or not addon.activeTheme or addon.activeTheme.name ~= 'WoW Classic' then return end
+    target:SetBackdrop({
+        bgFile = 'Interface/DialogFrame/UI-DialogBox-Background', edgeFile = BORDER,
+        tile = true, tileSize = 32, edgeSize = 16,
+        insets = {left = 4, right = 4, top = 4, bottom = 4},
+    })
+    target:SetBackdropColor(0.45, 0.45, 0.42, 1)
+    target:SetBackdropBorderColor(0.82, 0.66, 0.36, 1)
+    if target.title then
+        target.title:SetBackdrop({bgFile = WHITE, edgeFile = 'Interface/Tooltips/UI-Tooltip-Border', edgeSize = 8})
+        target.title:SetBackdropColor(0.12, 0.075, 0.025, 1)
+        target.title:SetBackdropBorderColor(0.6, 0.48, 0.24, 1)
+        if target.title.text then target.title.text:SetTextColor(1, 0.82, 0) end
+    end
+end
+hooksecurefunc(addon.targeting, 'CreateTargetFrame', SkinTargets)
+hooksecurefunc(addon.targeting, 'UpdateTargetFrame', SkinTargets)
 
 local footer = addon.RXPFrame.Footer
 local currentButton = CreateFrame('Button', nil, footer)
@@ -142,6 +252,10 @@ currentButton:SetScript('OnEnter', function(self)
     GameTooltip:Show()
 end)
 currentButton:SetScript('OnLeave', function() GameTooltip:Hide() end)
+addon.phyzCurrentButton = currentButton
+
+hooksecurefunc(addon, 'SetStep', Skin)
+addon.RXPFrame:HookScript('OnSizeChanged', Skin)
 
 function addon.UpdateActiveStepVisibility()
     local p = addon.settings and addon.settings.profile
@@ -169,6 +283,11 @@ hooksecurefunc(addon.settings, 'InitializeDatabase', function()
     if p and not p.phyzReadableLayout then
         p.guideFontSize = math.max(p.guideFontSize or 9, 12)
         p.phyzReadableLayout = true
+    end
+    if p and not p.phyzProfessionChrome then
+        p.frameHeight = math.max(p.frameHeight or 0, 360)
+        addon.RXPFrame:SetHeight(p.frameHeight)
+        p.phyzProfessionChrome = true
     end
     addon.UpdateActiveStepVisibility()
 end)

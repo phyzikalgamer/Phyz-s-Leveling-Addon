@@ -13,6 +13,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Test Lua syntax and UI callbacks
+        run: |
+          python -m pip install lupa==2.8
+          python tools/test_ui.py
       - name: Check version and build installable ZIP
         env:
           RELEASE_TAG: ${{ github.ref_name }}

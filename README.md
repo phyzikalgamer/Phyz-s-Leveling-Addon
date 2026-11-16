@@ -21,6 +21,10 @@ Source lives in `PhyzLeveling/`. Run `python tools/package.py` to validate and
 build `dist/PhyzLeveling-VERSION.zip`. Each version tag (`vVERSION`) publishes
 a GitHub release with that installable ZIP through GitHub Actions.
 
+For Lua syntax and UI callback smoke tests, install `lupa==2.8` and run
+`python tools/test_ui.py`. The release workflow runs these checks before packaging.
+These tests use simulated frames; visual verification still needs the WoW client.
+
 See [CHANGELOG.md](CHANGELOG.md), [rebase details](REBASE.md), and the
 [addon documentation](PhyzLeveling/README.md).
 

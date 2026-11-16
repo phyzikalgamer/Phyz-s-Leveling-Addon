@@ -1,4 +1,9 @@
-# Phyz Leveling Addon 0.2.2
+# Phyz Leveling Addon 0.3.0
+
+The WoW Classic theme now follows the profession-window reference: an integrated
+bronze frame, round map emblem, dark textured guide list, green step-progress
+bar, and red-and-gold Settings, My step and Check quests buttons. Active Targets
+uses the same frame styling. Guide logic and personal imports are unchanged.
 
 Direct fork of installed RestedXP Guides v4.11.36, with a classic WoW theme.
 Uses RestedXP's own guide window, step engine, map pins and waypoint arrow.

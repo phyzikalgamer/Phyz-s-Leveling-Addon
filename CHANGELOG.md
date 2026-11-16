@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 — 2026-11-16
+
+- Restyled the guide after the classic profession-window reference: one bronze frame, round map emblem, dark textured body and integrated header/footer.
+- Added a green guide-progress strip below the title.
+- Replaced footer icons with red-and-gold Settings, My step and Check quests buttons.
+- Matched Active Targets to the same bronze and dark-panel styling.
+- Preserved guide behaviour, location captions, completed-step colours and border-free current-step highlighting.
+
 ## 0.2.12 — 2026-11-15
 
 - Removed the active-step border; retained the background highlight and all other styling.
