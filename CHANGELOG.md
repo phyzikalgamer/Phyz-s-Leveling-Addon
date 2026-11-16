@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.2 — 2026-11-16
+
+- Docked Active Targets in its own section above the footer, preserving secure click-to-target buttons.
+- Keep current NPC buttons available after interaction for retargeting; refresh them with guide target updates.
+- Show the NPC name for a single target and an empty-state message when none are available.
+- Defer docking changes during combat; automatic targeting still requires a player click under the client's secure-action rules.
+
 ## 0.3.1 — 2026-11-16
 
 - Centred the round map emblem inside a plain bronze rim, removing the offset tracking artwork.

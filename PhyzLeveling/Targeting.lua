@@ -523,6 +523,14 @@ function addon.targeting:GOSSIP_SHOW()
 
     if not targetIndex then return end
 
+    -- Keep the current step's NPC available for click-to-retarget after gossip,
+    -- vendoring or turning in. The next guide target update replaces the list.
+    if addon.DockActiveTargets and not addon.v2:IsGuideWindowEnabled()
+        and addon.activeTheme and addon.activeTheme.name == 'WoW Classic' then
+        self:UpdateTargetFrame("target")
+        return
+    end
+
     tremove(targetList, targetIndex)
     self:UpdateTargetFrame("target")
     self:UpdateMacro()

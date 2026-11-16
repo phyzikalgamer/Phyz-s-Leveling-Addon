@@ -132,6 +132,7 @@ local function SkinArrow()
 end
 
 local function Skin()
+    if InCombatLockdown() then return end
     if not addon.activeTheme or addon.activeTheme.name ~= 'WoW Classic' then return end
     if addon.v2 and addon.v2:IsGuideWindowEnabled() then return end
     local frame = addon.RXPFrame
@@ -240,6 +241,7 @@ local function Skin()
     footer.icon:ClearAllPoints()
     footer.icon:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -2, 2)
     SkinScrollBar()
+    if addon.DockActiveTargets then addon.DockActiveTargets() end
 end
 
 -- Run after upstream refreshes so its banner never covers the native colours.
@@ -273,6 +275,85 @@ local function SkinTargets()
 end
 hooksecurefunc(addon.targeting, 'CreateTargetFrame', SkinTargets)
 hooksecurefunc(addon.targeting, 'UpdateTargetFrame', SkinTargets)
+
+function addon.DockActiveTargets()
+    if InCombatLockdown() then return end
+    if not addon.activeTheme or addon.activeTheme.name ~= 'WoW Classic' then return end
+    if addon.v2:IsGuideWindowEnabled() then return end
+    local frame = addon.RXPFrame
+    local target = addon.targeting.activeTargetFrame
+    if not frame.phyzTargetPanel then
+        local panel = CreateFrame('Frame', nil, frame, 'BackdropTemplate')
+        panel:SetBackdrop({bgFile = WHITE, edgeFile = 'Interface/Tooltips/UI-Tooltip-Border', edgeSize = 8})
+        panel:SetBackdropColor(0.035, 0.032, 0.025, 1)
+        panel:SetBackdropBorderColor(0.5, 0.4, 0.21, 1)
+        panel.label = panel:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
+        panel.label:SetPoint('TOPLEFT', 10, -7)
+        panel.label:SetText('Active targets - click to target')
+        panel.caption = panel:CreateFontString(nil, 'OVERLAY', 'GameFontHighlightSmall')
+        panel.caption:SetPoint('TOPLEFT', 44, -30)
+        panel.caption:SetPoint('RIGHT', panel, 'RIGHT', -10, 0)
+        panel.caption:SetJustifyH('LEFT')
+        panel.caption:SetWordWrap(false)
+        frame.phyzTargetPanel = panel
+    end
+    local panel = frame.phyzTargetPanel
+    panel:ClearAllPoints()
+    panel:SetPoint('BOTTOMLEFT', frame.Footer, 'TOPLEFT', 0, 7)
+    panel:SetPoint('BOTTOMRIGHT', frame.Footer, 'TOPRIGHT', 0, 7)
+    local count, first = 0, nil
+    local columns = math.max(1, math.floor((frame:GetWidth() - 38) / 32))
+    if target then
+        target:SetParent(panel)
+        target:ClearAllPoints()
+        target:SetPoint('TOPLEFT', panel, 'TOPLEFT', 0, 0)
+        target:SetMovable(false)
+        target:SetClampedToScreen(false)
+        target:SetScript('OnMouseDown', nil)
+        target:SetScript('OnMouseUp', nil)
+        target:ClearBackdrop()
+        target.title:Hide()
+        target.title:EnableMouse(false)
+        target:SetFrameLevel(panel:GetFrameLevel() + 1)
+        if addon.settings.profile.enableTargetFrame then
+            for _, buttons in ipairs({target.friendlyTargetButtons, target.enemyTargetButtons}) do
+                for _, button in ipairs(buttons or {}) do
+                    if button:IsShown() and button.targetData then
+                        local col, row = count % columns, math.floor(count / columns)
+                        button:ClearAllPoints()
+                        button:SetPoint('TOPLEFT', target, 'TOPLEFT', 10 + col * 32, -25 - row * 32)
+                        button:SetSize(26, 26)
+                        count = count + 1
+                        first = first or button.targetData.name
+                    end
+                end
+            end
+        end
+        target:SetSize(math.max(1, frame:GetWidth() - 18), 26 + math.max(1, math.ceil(count / columns)) * 32)
+    end
+    local height = 30 + math.max(1, math.ceil(count / columns)) * 32
+    panel:SetHeight(height)
+    panel.caption:SetText(count == 1 and first or count == 0 and 'No active targets for this step' or '')
+    if count == 0 then
+        panel.caption:ClearAllPoints()
+        panel.caption:SetPoint('TOPLEFT', panel, 'TOPLEFT', 10, -30)
+        panel.caption:SetPoint('RIGHT', panel, 'RIGHT', -10, 0)
+    else
+        panel.caption:ClearAllPoints()
+        panel.caption:SetPoint('TOPLEFT', panel, 'TOPLEFT', 44, -30)
+        panel.caption:SetPoint('RIGHT', panel, 'RIGHT', -10, 0)
+    end
+    frame.BottomFrame:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -9, 48 + height)
+end
+hooksecurefunc(addon.targeting, 'CreateTargetFrame', addon.DockActiveTargets)
+hooksecurefunc(addon.targeting, 'UpdateTargetFrame', addon.DockActiveTargets)
+local dockEvents = CreateFrame('Frame')
+dockEvents:RegisterEvent('PLAYER_REGEN_ENABLED')
+dockEvents:RegisterEvent('PLAYER_ENTERING_WORLD')
+dockEvents:SetScript('OnEvent', function()
+    if addon.targeting.activeTargetFrame then addon.targeting:UpdateTargetFrame() end
+    addon.DockActiveTargets()
+end)
 
 local footer = addon.RXPFrame.Footer
 local currentButton = CreateFrame('Button', nil, footer)

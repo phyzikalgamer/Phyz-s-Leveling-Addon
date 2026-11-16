@@ -20,7 +20,8 @@ function NewFrame()
 end
 for _, name in ipairs({'SetBackdrop','SetBackdropColor','SetBackdropBorderColor','SetVertexColor',
     'SetColorTexture','SetTexCoord','EnableMouse','SetStatusBarTexture','SetStatusBarColor',
-    'SetFont','SetTextColor','SetDrawLayer','SetSpacing','SetWordWrap','SetJustifyH','AddMaskTexture'}) do
+    'SetFont','SetTextColor','SetDrawLayer','SetSpacing','SetWordWrap','SetJustifyH','AddMaskTexture',
+    'SetMovable','SetClampedToScreen','RegisterEvent','ClearBackdrop'}) do
     methods[name] = function(self, ...) self[name .. 'Args'] = {...} end
 end
 function methods:SetPoint(...) self.points=self.points or {}; table.insert(self.points,{...}) end
@@ -132,5 +133,22 @@ end
 local row=NewFrame(); row.step={index=8,completed=true,elements={}}
 assert(addon.FormatGuideRow(row,'|cFF00FF00Talk to NPC|r'):find('|cFF888888',1,true))
 assert(not addon.FormatGuideRow(row,'|cFF00FF00Talk to NPC|r'):find('FF00FF00',1,true))
+-- Dock existing secure target buttons without changing their click action.
+addon.settings.profile.enableTargetFrame=true
+local target=NewFrame(); target.title=NewFrame(); target.title.text=NewFrame()
+local secure=NewFrame(); secure.targetData={name='Innkeeper Shay'}
+secure.attributes={type='macro',macrotext='/targetexact Innkeeper Shay'}
+target.friendlyTargetButtons={secure}; target.enemyTargetButtons={}
+addon.targeting.activeTargetFrame=target
+addon.DockActiveTargets()
+assert(target.parent==addon.RXPFrame.phyzTargetPanel)
+assert(secure.width==26 and secure.attributes.macrotext=='/targetexact Innkeeper Shay')
+assert(addon.RXPFrame.phyzTargetPanel.caption.textValue=='Innkeeper Shay')
+local parent=target.parent
+InCombatLockdown=function() return true end
+addon.RXPFrame.phyzTargetPanel=nil
+addon.DockActiveTargets()
+assert(target.parent==parent and addon.RXPFrame.phyzTargetPanel==nil, 'Do not reparent secure targets in combat')
+InCombatLockdown=function() return false end
 ''')
 print(f'Lua 5.1 syntax: {len(files)} files passed; UI lifecycle, progress, controls, widths and completed colours passed.')
