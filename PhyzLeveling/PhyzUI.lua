@@ -1,4 +1,4 @@
-local _, addon = ...
+local addonName, addon = ...
 local WHITE = 'Interface/Buttons/WHITE8X8'
 local BORDER = 'Interface/DialogFrame/UI-DialogBox-Border'
 
@@ -97,6 +97,40 @@ local function RedButton(button, label)
     button.phyzLabel:SetTextColor(1, 0.82, 0)
 end
 
+local function SkinScrollBar()
+    if not addon.activeTheme or addon.activeTheme.name ~= 'WoW Classic' then return end
+    local scrollbar = addon.RXPFrame.ScrollFrame and addon.RXPFrame.ScrollFrame.ScrollBar
+    if not scrollbar then return end
+    for _, direction in ipairs({'Up', 'Down'}) do
+        local button = scrollbar['Scroll' .. direction .. 'Button']
+        local prefix = 'Interface/Buttons/UI-ScrollBar-Scroll' .. direction .. 'Button-'
+        button.Normal:SetTexture(prefix .. 'Up')
+        button.Pushed:SetTexture(prefix .. 'Down')
+        button.Highlight:SetTexture(prefix .. 'Highlight')
+        button.Disabled:SetTexture(prefix .. 'Disabled')
+        button.Normal:SetVertexColor(1, 0.85, 0.55)
+        button.Pushed:SetVertexColor(1, 0.85, 0.55)
+    end
+    scrollbar:SetThumbTexture('Interface/Buttons/UI-ScrollBar-Knob')
+    local thumb = scrollbar:GetThumbTexture()
+    if thumb then
+        thumb:SetVertexColor(0.85, 0.68, 0.38)
+        thumb:SetSize(16, 24)
+    end
+end
+
+local function SkinArrow()
+    if not addon.activeTheme or addon.activeTheme.name ~= 'WoW Classic' then return end
+    local arrow = addon.arrowFrame
+    if not arrow or not arrow.texture then return end
+    -- Native upright minimap pointer; the original engine still rotates it.
+    arrow.texture:SetTexture('Interface/Minimap/MinimapArrow')
+    arrow.texture:SetVertexColor(1, 0.82, 0.28, 1)
+    arrow.text:SetTextColor(1, 0.87, 0.55)
+    local p = addon.settings and addon.settings.profile
+    arrow.text:SetFont(addon.font, math.max(11, p and p.arrowText or 9), 'OUTLINE')
+end
+
 local function Skin()
     if not addon.activeTheme or addon.activeTheme.name ~= 'WoW Classic' then return end
     if addon.v2 and addon.v2:IsGuideWindowEnabled() then return end
@@ -146,9 +180,11 @@ local function Skin()
             header.phyzPortraitMask = mask
         end
         header.phyzPortraitRing = header:CreateTexture(nil, 'OVERLAY')
-        header.phyzPortraitRing:SetTexture('Interface/Minimap/MiniMap-TrackingBorder')
-        header.phyzPortraitRing:SetSize(78, 78)
-        header.phyzPortraitRing:SetPoint('TOPLEFT', header.icon, 'TOPLEFT', -7, 7)
+        header.phyzPortraitRing:SetTexture('Interface/AddOns/' .. addonName .. '/Textures/white_circle')
+        header.phyzPortraitRing:SetDrawLayer('BORDER')
+        header.phyzPortraitRing:SetVertexColor(0.72, 0.53, 0.24, 1)
+        header.phyzPortraitRing:SetSize(54, 54)
+        header.phyzPortraitRing:SetPoint('CENTER', header.icon, 'CENTER', 0, 0)
     end
     if not frame.phyzProgress then
         local progress = CreateFrame('StatusBar', nil, frame, 'BackdropTemplate')
@@ -203,6 +239,7 @@ local function Skin()
     end
     footer.icon:ClearAllPoints()
     footer.icon:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -2, 2)
+    SkinScrollBar()
 end
 
 -- Run after upstream refreshes so its banner never covers the native colours.
@@ -210,6 +247,10 @@ hooksecurefunc(addon, 'SetupGuideWindow', Skin)
 hooksecurefunc(addon.RXPFrame, 'UpdateVisuals', Skin)
 hooksecurefunc(addon, 'RenderFrame', Skin)
 hooksecurefunc(addon, 'UpdateGuideFontSize', Skin)
+hooksecurefunc(addon.RXPFrame, 'UpdateScrollBar', SkinScrollBar)
+hooksecurefunc(addon.arrowFrame, 'UpdateVisuals', SkinArrow)
+hooksecurefunc(addon, 'SetupArrow', SkinArrow)
+hooksecurefunc(addon, 'OnInitialize', SkinArrow)
 
 local function SkinTargets()
     if InCombatLockdown() then return end

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 — 2026-11-16
+
+- Centred the round map emblem inside a plain bronze rim, removing the offset tracking artwork.
+- Replaced purple scrollbar controls with native WoW arrows and a bronze thumb.
+- Restyled the navigation pointer and distance label in gold without changing routing or rotation.
+
 ## 0.3.0 — 2026-11-16
 
 - Restyled the guide after the classic profession-window reference: one bronze frame, round map emblem, dark textured body and integrated header/footer.

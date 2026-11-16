@@ -20,7 +20,7 @@ function NewFrame()
 end
 for _, name in ipairs({'SetBackdrop','SetBackdropColor','SetBackdropBorderColor','SetVertexColor',
     'SetColorTexture','SetTexCoord','EnableMouse','SetStatusBarTexture','SetStatusBarColor',
-    'SetFont','SetTextColor','SetSpacing','SetWordWrap','SetJustifyH','AddMaskTexture'}) do
+    'SetFont','SetTextColor','SetDrawLayer','SetSpacing','SetWordWrap','SetJustifyH','AddMaskTexture'}) do
     methods[name] = function(self, ...) self[name .. 'Args'] = {...} end
 end
 function methods:SetPoint(...) self.points=self.points or {}; table.insert(self.points,{...}) end
@@ -42,6 +42,8 @@ function methods:SetHighlightTexture(s) self.highlight=NewFrame() end
 function methods:GetNormalTexture() return self.normal end
 function methods:GetPushedTexture() return self.pushed end
 function methods:GetHighlightTexture() return self.highlight end
+function methods:SetThumbTexture(path) self.thumb=NewFrame(); self.thumb.texture=path end
+function methods:GetThumbTexture() return self.thumb end
 function methods:CreateTexture() return NewFrame() end
 function methods:CreateMaskTexture() return NewFrame() end
 function methods:CreateFontString() return NewFrame() end
@@ -73,11 +75,22 @@ f.BottomFrame=NewFrame(); f.GuideName=NewFrame(); f.Footer=NewFrame(); f.Current
 for _, panel in ipairs({f.GuideName,f.Footer}) do panel.bg=NewFrame(); panel.text=NewFrame() end
 f.GuideName.icon=NewFrame(); f.GuideName.classIcon=NewFrame()
 f.Footer.cog=NewFrame(); f.Footer.icon=NewFrame()
+f.ScrollFrame=NewFrame(); f.ScrollFrame.ScrollBar=NewFrame()
+for _, direction in ipairs({'Up','Down'}) do
+    local button=NewFrame()
+    for _, part in ipairs({'Normal','Pushed','Highlight','Disabled'}) do button[part]=NewFrame() end
+    f.ScrollFrame.ScrollBar['Scroll' .. direction .. 'Button']=button
+end
+addon.arrowFrame=NewFrame(); addon.arrowFrame.texture=NewFrame(); addon.arrowFrame.text=NewFrame()
+function addon.arrowFrame:UpdateVisuals() end
+function f.UpdateScrollBar() end
 function f.UpdateVisuals() end
 function f.CurrentStepFrame.UpdateText() end
 function f.BottomFrame.UpdateFrame() end
 function f.BottomFrame:StepScroll(n) addon.scrolled=n end
 function addon.SetupGuideWindow() end
+function addon.SetupArrow() end
+function addon.OnInitialize() end
 function addon.RenderFrame() end
 function addon.UpdateGuideFontSize() end
 function addon.SetStep(n) addon.changedStep=n end
@@ -97,6 +110,12 @@ addon.settings:InitializeDatabase()
 addon.SetupGuideWindow()
 assert(addon.RXPFrame.phyzProgress.label.textValue=='STEP 9 / 20')
 assert(addon.RXPFrame.phyzProgress.value==8)
+assert(addon.RXPFrame.GuideName.phyzPortraitRing.width==54)
+assert(addon.RXPFrame.GuideName.phyzPortraitRing.points[1][1]=='CENTER')
+assert(addon.RXPFrame.ScrollFrame.ScrollBar.thumb.texture=='Interface/Buttons/UI-ScrollBar-Knob')
+addon.SetupArrow()
+assert(addon.arrowFrame.texture.texture=='Interface/Minimap/MinimapArrow')
+assert(addon.arrowFrame.scripts.OnUpdate==nil, 'Arrow skin must not replace navigation callbacks')
 assert(addon.RXPFrame.Footer.cog.phyzLabel.textValue=='Settings')
 assert(addon.questCheckButton.phyzLabel.textValue=='Check quests')
 assert(not addon.RXPFrame.Footer.text.shown)

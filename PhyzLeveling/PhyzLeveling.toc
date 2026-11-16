@@ -3,7 +3,7 @@
 ## Title-zhCN: Phyz Leveling Addon
 ## Notes: RestedXP-based leveling with a classic WoW interface.
 ## Author: Phyz; based on RestedXP
-## Version: 0.3.0
+## Version: 0.3.1
 ## Category: Quests
 ## Category-deDE: Quests
 ## Category-esES: Misiones
