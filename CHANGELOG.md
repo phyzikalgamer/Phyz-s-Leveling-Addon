@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1 — 2026-11-17
+
+- Rewrote repository and packaged READMEs for players, covering features, installation, controls, guide availability and support.
+- Moved development details out of the main introduction and clarified optional addons and licensing.
+
 ## 0.4.0 — 2026-11-17
 
 - Replaced the hand-built frame, portrait rim and corner art with Blizzard's native window template and a basic-template fallback.
