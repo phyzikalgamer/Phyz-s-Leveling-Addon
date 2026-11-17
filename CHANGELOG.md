@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.3 — 2026-11-17
+
+- Anchor guide-list rows directly to the scroll container instead of chaining them to every previous row.
+- Reflow row offsets when wrapped text or completion changes their heights.
+- Bounds native anchor dependency depth for late-step item buttons; addresses the recursive layout path seen in Error #109 reports.
+- Retains current-step scrolling, hidden-row collapse and final-step scroll space. Crash resolution still requires confirmation on the affected client.
+
 ## 0.4.2 — 2026-11-17
 
 - Removed full layout rebuilding and duplicate item docking from step-advance hooks.

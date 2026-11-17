@@ -1535,6 +1535,23 @@ ScrollChild:SetWidth(math.max(1, ScrollFrame:GetWidth() - 14))
 
 ScrollFrame:SetScrollChild(ScrollChild)
 
+-- Keep dependency depth independent of guide length. Do not anchor rows to
+-- other rows: native anchor validation recursively follows both corner links.
+local function LayoutGuideRows()
+    local y = 3
+    for n, row in ipairs(ScrollChild.framePool) do
+        if not row:IsShown() then break end
+        row:ClearAllPoints()
+        row:SetPoint("TOPLEFT", ScrollChild, "TOPLEFT", 2, -y)
+        row:SetPoint("TOPRIGHT", ScrollChild, "TOPRIGHT", -2, -y)
+        if not row.phyzRowHidden then y = y + row:GetHeight() + 3 end
+        stepPos[n] = y - 3
+    end
+    stepPos[0] = y - 3
+    ScrollChild:SetHeight(math.max(1, y - 3) + ScrollFrame:GetHeight())
+end
+
+
 function addon.GetGuideName(guide)
     if not guide then guide = addon.currentGuide end
     local som = addon.settings.profile.season == 1
@@ -2003,21 +2020,10 @@ function addon:LoadGuide(guide, OnLoad)
             frame:SetAlpha(0.66)
             frame:ClearAllPoints()
 
-            local anchor
-
-            if n == 1 then
-                anchor = ScrollChild
-                frame:SetPoint("TOPLEFT", anchor, "TOPLEFT", 2, -3)
-                frame:SetPoint("TOPRIGHT", anchor, "TOPRIGHT", 2, -3)
-            elseif not IsFrameShown(frame,step) then
-                anchor = ScrollChild.framePool[n - 1]
-                frame:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, 1)
-                frame:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT", 0, 1)
-            else
-                anchor = ScrollChild.framePool[n - 1]
-                frame:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -3)
-                frame:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT", 0, -3)
-            end
+            -- Flat anchors avoid recursively walking every preceding step when
+            -- an item button is attached to a later row.
+            frame:SetPoint("TOPLEFT", ScrollChild, "TOPLEFT", 2, -3 - (n - 1) * 23)
+            frame:SetPoint("TOPRIGHT", ScrollChild, "TOPRIGHT", -2, -3 - (n - 1) * 23)
 
             frame:ClearBackdrop()
             frame:SetBackdrop(RXPFrame.backdrop.bottom)
@@ -2162,6 +2168,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
 
         local fheight
         local hideStep = step.level > level or (not IsFrameShown(frame,step))
+        frame.phyzRowHidden = hideStep
 
         local text, rawtext, icon
         local stepDiff
@@ -2240,11 +2247,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
 
         frame:SetHeight(fheight)
 
-        for n = stepNumber + 1, #stepPos do
-            stepPos[n] = stepPos[n] + hDiff
-        end
-
-        stepPos[0] = stepPos[0] + hDiff
+        LayoutGuideRows()
 
     else
         addon.updateBottomFrame = false
@@ -2259,6 +2262,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
             frame.step = addon.currentGuide.steps[n]
             local step = frame.step
             local hideStep = step.level > level or not IsFrameShown(frame,step)
+            frame.phyzRowHidden = hideStep
             local fheight
             for _, element in ipairs(frame.step.elements or {}) do
                 if not self then
@@ -2349,9 +2353,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
     local guide = addon.currentGuide
 
     if guide then
-        -- Extra scroll space lets even the final step sit at the top.
-        ScrollChild:SetHeight(math.max(1, ScrollChild.f1:GetHeight() -
-                                  (BottomFrame.hiddenFrames or 1) * 4) + ScrollFrame:GetHeight())
+        LayoutGuideRows()
     end
 
     local w = math.max(1, ScrollFrame:GetWidth() - 14)

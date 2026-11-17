@@ -1,5 +1,6 @@
 """Lua 5.1 UI smoke checks. Requires lupa (a local backups/test-runtime install works)."""
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -211,4 +212,42 @@ assert(item.parent==addon.RXPFrame.phyzItemClip and itemRow.phyzInlineItems==1)
 assert(item.attributes.item=='item:123' and item.width==28)
 assert(addon.activeItemFrame.alpha==0)
 ''')
+
+# Run the actual guide-list layout function against a long guide, rather than
+# duplicating its algorithm in the test. Native anchor walks must stay shallow.
+source = (ROOT / 'PhyzLeveling' / 'GuideWindow.lua').read_text(encoding='utf-8')
+layout = re.search(r'local function LayoutGuideRows\(\).*?^end', source, re.M | re.S)[0]
+factory = lua.execute('return function(ScrollChild, ScrollFrame, stepPos)\n' + layout + '\nreturn LayoutGuideRows end')
+lua.globals().layout_factory = factory
+lua.execute(r'''
+local container, viewport, positions=NewFrame(),NewFrame(),{}
+viewport.height=180
+container.framePool={}
+for i=1,209 do
+    local row=NewFrame(); row.height=40+(i%4)*12
+    container.framePool[i]=row
+end
+local layout=layout_factory(container,viewport,positions)
+layout()
+for i,row in ipairs(container.framePool) do
+    assert(#row.points==2 and row.points[1][2]==container and row.points[2][2]==container,
+        'Every guide row must anchor to the container, never a previous row')
+end
+local before=container.framePool[55].points[1][5]
+container.framePool[46].height=container.framePool[46].height+30
+layout()
+assert(container.framePool[55].points[1][5]==before-30, 'Later row positions must follow changed heights')
+container.framePool[46].phyzRowHidden=true
+layout()
+assert(container.framePool[47].points[1][5]==container.framePool[46].points[1][5], 'Hidden rows take no space')
+assert(container.height==positions[0]+viewport.height, 'Keep space to align the final step')
+local visits=0
+local function walk(frame)
+    visits=visits+1; assert(visits<20, 'Native anchor walk grows with step number')
+    for _,point in ipairs(frame.points or {}) do walk(point[2]) end
+end
+walk(container.framePool[55])
+assert(visits==3)
+''')
 print(f'Lua 5.1 syntax: {len(files)} files passed; UI lifecycle, progress, controls, widths and completed colours passed.')
+print('Long-guide regression: 209 flat-anchored rows; step 46/55 reflow, hidden rows and final-step spacing passed.')
