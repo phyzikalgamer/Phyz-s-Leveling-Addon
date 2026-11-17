@@ -1531,7 +1531,7 @@ hooksecurefunc(ScrollFrame.ScrollBar, "SetValue", function(self, value)
 end)
 
 ScrollChild.framePool = {}
-ScrollChild:SetWidth(math.max(1, ScrollFrame:GetWidth() - 4))
+ScrollChild:SetWidth(math.max(1, ScrollFrame:GetWidth() - 14))
 
 ScrollFrame:SetScrollChild(ScrollChild)
 
@@ -2354,7 +2354,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
                                   (BottomFrame.hiddenFrames or 1) * 4) + ScrollFrame:GetHeight())
     end
 
-    local w = math.max(1, ScrollFrame:GetWidth() - 4)
+    local w = math.max(1, ScrollFrame:GetWidth() - 14)
     ScrollChild:SetWidth(w)
     local bottomFrameHeight = BottomFrame:GetHeight()
 

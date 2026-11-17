@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3 — 2026-11-17
+
+- Added 10px of right-side clearance between guide rows and the scrollbar area.
+
 ## 0.3.2 — 2026-11-16
 
 - Docked Active Targets in its own section above the footer, preserving secure click-to-target buttons.
