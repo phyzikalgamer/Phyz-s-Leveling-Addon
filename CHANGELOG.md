@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.5 — 2026-11-17
+
+- Dock active item buttons at the right of their owning step, with text clearance.
+- Preserve secure item actions, tooltips and cooldowns; clip icons to the viewport.
+- Defer secure layout changes during combat; unmatched actions retain their existing container.
+
 ## 0.3.4 — 2026-11-17
 
 - Restored visible native grunge texture in the step panels with brighter texture tints.

@@ -2231,7 +2231,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
             frame:SetAlpha(0)
         else
             frame.text:Show()
-            fheight = math.ceil(frame.text:GetStringHeight() + 20 + (frame.phyzLocation and frame.phyzLocation:IsShown() and 16 or 0))
+            fheight = math.max(math.ceil(frame.text:GetStringHeight() + 20 + (frame.phyzLocation and frame.phyzLocation:IsShown() and 16 or 0)), (frame.phyzInlineItems or 0) * 30 + 20)
             frame:SetAlpha(1)
         end
 
@@ -2321,7 +2321,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
                     frame:SetAlpha(0)
                 else
                     frame.text:SetText(addon.FormatGuideRow(frame, text))
-                    fheight = math.ceil(frame.text:GetStringHeight() + 20 + (frame.phyzLocation and frame.phyzLocation:IsShown() and 16 or 0))
+                    fheight = math.max(math.ceil(frame.text:GetStringHeight() + 20 + (frame.phyzLocation and frame.phyzLocation:IsShown() and 16 or 0)), (frame.phyzInlineItems or 0) * 30 + 20)
                 end
             end
             step.text = text

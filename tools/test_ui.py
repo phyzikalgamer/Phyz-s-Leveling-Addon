@@ -21,7 +21,7 @@ end
 for _, name in ipairs({'SetBackdrop','SetBackdropColor','SetBackdropBorderColor','SetVertexColor',
     'SetColorTexture','SetTexCoord','EnableMouse','SetStatusBarTexture','SetStatusBarColor',
     'SetFont','SetTextColor','SetDrawLayer','SetSpacing','SetWordWrap','SetJustifyH','AddMaskTexture',
-    'SetMovable','SetClampedToScreen','RegisterEvent','ClearBackdrop'}) do
+    'SetMovable','SetClampedToScreen','SetClipsChildren','RegisterEvent','ClearBackdrop'}) do
     methods[name] = function(self, ...) self[name .. 'Args'] = {...} end
 end
 function methods:SetPoint(...) self.points=self.points or {}; table.insert(self.points,{...}) end
@@ -91,6 +91,7 @@ function f.BottomFrame.UpdateFrame() end
 function f.BottomFrame:StepScroll(n) addon.scrolled=n end
 function addon.SetupGuideWindow() end
 function addon.SetupArrow() end
+function addon.UpdateItemFrame() end
 function addon.OnInitialize() end
 function addon.RenderFrame() end
 function addon.UpdateGuideFontSize() end
@@ -130,7 +131,7 @@ for _, width in ipairs({220,400,640}) do
     local button=addon.questCheckButton
     assert(button.points[1][4]+button.width <= width-18, 'Footer buttons overflow')
 end
-local row=NewFrame(); row.step={index=8,completed=true,elements={}}
+local row=NewFrame(); row.text=NewFrame(); row.step={index=8,completed=true,elements={}}
 assert(addon.FormatGuideRow(row,'|cFF00FF00Talk to NPC|r'):find('|cFF888888',1,true))
 assert(not addon.FormatGuideRow(row,'|cFF00FF00Talk to NPC|r'):find('FF00FF00',1,true))
 -- Dock existing secure target buttons without changing their click action.
@@ -150,5 +151,15 @@ addon.RXPFrame.phyzTargetPanel=nil
 addon.DockActiveTargets()
 assert(target.parent==parent and addon.RXPFrame.phyzTargetPanel==nil, 'Do not reparent secure targets in combat')
 InCombatLockdown=function() return false end
+-- Inline item layout preserves the original secure action and item identity.
+local item=NewFrame(); item.itemId=123; item.attributes={type1='item',item='item:123'}
+local itemRow=NewFrame(); itemRow.text=NewFrame(); itemRow.step={index=9,activeItems={[123]=true}}
+addon.RXPFrame.ScrollChild={framePool={[9]=itemRow}}
+addon.RXPFrame.activeSteps={itemRow.step}
+addon.activeItemFrame=NewFrame(); addon.activeItemFrame.buttonList={item}
+addon.DockActiveItems()
+assert(item.parent==addon.RXPFrame.phyzItemClip and itemRow.phyzInlineItems==1)
+assert(item.attributes.item=='item:123' and item.width==28)
+assert(addon.activeItemFrame.alpha==0)
 ''')
 print(f'Lua 5.1 syntax: {len(files)} files passed; UI lifecycle, progress, controls, widths and completed colours passed.')

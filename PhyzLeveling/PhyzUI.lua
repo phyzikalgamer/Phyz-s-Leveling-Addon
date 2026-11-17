@@ -76,6 +76,7 @@ end
 
 function addon.FormatGuideRow(frame, text)
     addon.StyleGuideRow(frame)
+    frame.text:SetPoint('RIGHT', frame, 'RIGHT', frame.phyzInlineItems and -52 or -12, 0)
     if not frame.phyzLocation then
         frame.phyzLocation = frame:CreateFontString(nil, 'OVERLAY')
         frame.phyzLocation:SetPoint('BOTTOMLEFT', frame, 'BOTTOMLEFT', 10, 7)
@@ -270,6 +271,58 @@ hooksecurefunc(addon.arrowFrame, 'UpdateVisuals', SkinArrow)
 hooksecurefunc(addon, 'SetupArrow', SkinArrow)
 hooksecurefunc(addon, 'OnInitialize', SkinArrow)
 
+function addon.DockActiveItems()
+    if InCombatLockdown() or addon.v2:IsGuideWindowEnabled() then return end
+    local root, items = addon.RXPFrame, addon.activeItemFrame
+    if not items or not root.ScrollChild then return end
+    if not root.phyzItemClip then
+        local clip = CreateFrame('Frame', nil, root.BottomFrame)
+        clip:SetAllPoints(root.ScrollFrame)
+        clip:SetClipsChildren(true)
+        root.phyzItemClip = clip
+    end
+    local clip = root.phyzItemClip
+    local changed, external = false, false
+    for _, row in ipairs(root.ScrollChild.framePool or {}) do
+        if row.phyzInlineItems then changed = true end
+        row.phyzInlineItems = nil
+    end
+    local counts = {}
+    for index, button in ipairs(items.buttonList or {}) do
+        if button:IsShown() then
+            local owner
+            for _, step in ipairs(root.activeSteps or {}) do
+                local matches = button.spell and step.activeSpells and step.activeSpells[button.itemId]
+                    or not button.spell and button.itemId and step.activeItems and step.activeItems[button.itemId]
+                if matches and root.ScrollChild.framePool[step.index] then
+                    owner = root.ScrollChild.framePool[step.index]
+                    if step.index == addon.GetGuideProgress() then break end
+                end
+            end
+            button:ClearAllPoints()
+            if owner then
+                counts[owner] = (counts[owner] or 0) + 1
+                owner.phyzInlineItems = counts[owner]
+                button:SetParent(clip)
+                button:SetPoint('TOPRIGHT', owner, 'TOPRIGHT', -10, -10 - (counts[owner] - 1) * 30)
+                button:SetSize(28, 28)
+                button:SetFrameLevel(clip:GetFrameLevel() + 2)
+                changed = true
+            else
+                -- Unmatched spells/macros keep their original working container.
+                button:SetParent(items)
+                button:SetPoint('BOTTOMLEFT', items, 'BOTTOMLEFT', 4 + (index - 1) * 27, 2)
+                button:SetSize(25, 25)
+                external = true
+            end
+        end
+    end
+    items:SetAlpha(external and 1 or 0)
+    if changed then addon.updateBottomFrame = true end
+end
+hooksecurefunc(addon, 'UpdateItemFrame', addon.DockActiveItems)
+hooksecurefunc(addon, 'SetStep', addon.DockActiveItems)
+
 local function SkinTargets()
     if InCombatLockdown() then return end
     if addon.settings.profile.hideActiveTargetsBackground then return end
@@ -369,6 +422,7 @@ dockEvents:RegisterEvent('PLAYER_ENTERING_WORLD')
 dockEvents:SetScript('OnEvent', function()
     if addon.targeting.activeTargetFrame then addon.targeting:UpdateTargetFrame() end
     addon.DockActiveTargets()
+    addon.DockActiveItems()
 end)
 
 local footer = addon.RXPFrame.Footer
