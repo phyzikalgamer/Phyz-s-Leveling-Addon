@@ -21,6 +21,8 @@ function addon.StyleGuideRow(frame)
     end
     -- Native backdrop colours multiply an already dark texture. Use brighter
     -- tints here so the marble/grunge remains visible rather than becoming flat.
+    if frame.phyzStyleState == state then return end
+    frame.phyzStyleState = state
     frame:ClearBackdrop()
     if state == 'done' then
         frame.phyzPanelTexture:SetVertexColor(0.32, 0.31, 0.28, 1)
@@ -45,7 +47,11 @@ end
 
 function addon.FormatGuideRow(frame, text)
     addon.StyleGuideRow(frame)
-    frame.text:SetPoint('RIGHT', frame, 'RIGHT', frame.phyzInlineItems and -52 or -12, 0)
+    local inset = frame.phyzInlineItems and -52 or -12
+    if frame.phyzTextInset ~= inset then
+        frame.text:SetPoint('RIGHT', frame, 'RIGHT', inset, 0)
+        frame.phyzTextInset = inset
+    end
     if not frame.phyzLocation then
         frame.phyzLocation = frame:CreateFontString(nil, 'OVERLAY')
         frame.phyzLocation:SetPoint('BOTTOMLEFT', frame, 'BOTTOMLEFT', 10, 7)
@@ -56,8 +62,11 @@ function addon.FormatGuideRow(frame, text)
         frame.phyzLocation:SetWordWrap(false)
     end
     local location = text and text ~= '' and StepLocation(frame.step)
-    frame.phyzLocation:SetText(location or '')
-    frame.phyzLocation:SetShown(location ~= nil and location ~= false)
+    if frame.phyzLocationValue ~= (location or '') then
+        frame.phyzLocationValue = location or ''
+        frame.phyzLocation:SetText(location or '')
+        frame.phyzLocation:SetShown(not not location)
+    end
     if not text or text == '' then return '' end
     local title = string.format('Step %d', frame.step.index)
     if RowState(frame.step) == 'done' then
@@ -66,6 +75,11 @@ function addon.FormatGuideRow(frame, text)
         return '|cFF888888' .. title .. '\n' .. text .. '|r'
     end
     return '|cFFFFD100' .. title .. '|r\n' .. text
+end
+
+function addon.SetGuideRowText(frame, text)
+    local formatted = addon.FormatGuideRow(frame, text)
+    if frame.text:GetText() ~= formatted then frame.text:SetText(formatted) end
 end
 
 local function NativeButton(button, label)
@@ -265,14 +279,11 @@ function addon.DockActiveItems()
         local clip = CreateFrame('Frame', nil, root.BottomFrame)
         clip:SetAllPoints(root.ScrollFrame)
         clip:SetClipsChildren(true)
+        clip:EnableMouse(false)
         root.phyzItemClip = clip
     end
     local clip = root.phyzItemClip
     local changed, external = false, false
-    for _, row in ipairs(root.ScrollChild.framePool or {}) do
-        if row.phyzInlineItems then changed = true end
-        row.phyzInlineItems = nil
-    end
     local counts = {}
     for index, button in ipairs(items.buttonList or {}) do
         if button:IsShown() then
@@ -285,24 +296,38 @@ function addon.DockActiveItems()
                     if step.index == addon.GetGuideProgress() then break end
                 end
             end
-            button:ClearAllPoints()
             if owner then
                 counts[owner] = (counts[owner] or 0) + 1
-                owner.phyzInlineItems = counts[owner]
+                if button.phyzOwner ~= owner or button.phyzSlot ~= counts[owner] then
+                button:ClearAllPoints()
                 button:SetParent(clip)
                 button:SetPoint('TOPRIGHT', owner, 'TOPRIGHT', -10, -10 - (counts[owner] - 1) * 30)
                 button:SetSize(28, 28)
                 button:SetFrameLevel(clip:GetFrameLevel() + 2)
-                changed = true
+                button.phyzOwner, button.phyzSlot = owner, counts[owner]
+                end
             else
                 -- Unmatched spells/macros keep their original working container.
+                if button.phyzOwner ~= items or button.phyzSlot ~= index then
+                button:ClearAllPoints()
                 button:SetParent(items)
                 button:SetPoint('BOTTOMLEFT', items, 'BOTTOMLEFT', 4 + (index - 1) * 27, 2)
                 button:SetSize(25, 25)
+                button.phyzOwner, button.phyzSlot = items, index
+                end
                 external = true
             end
         end
     end
+    for _, row in pairs(root.ScrollChild.framePool or {}) do
+        if row.phyzInlineItems ~= counts[row] then
+            row.phyzInlineItems = counts[row]
+            changed = true
+        end
+    end
+    -- A transparent legacy container must not intercept world clicks.
+    items:EnableMouse(external)
+    if items.title then items.title:EnableMouse(external) end
     items:SetAlpha(external and 1 or 0)
     if changed then addon.updateBottomFrame = true end
 end

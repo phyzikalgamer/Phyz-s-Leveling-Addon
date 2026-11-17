@@ -25,7 +25,7 @@ for _, name in ipairs({'SetBackdrop','SetBackdropColor','SetBackdropBorderColor'
     'SetMovable','SetClampedToScreen','SetClipsChildren','RegisterEvent','ClearBackdrop'}) do
     methods[name] = function(self, ...) self[name .. 'Args'] = {...} end
 end
-function methods:SetPoint(...) self.points=self.points or {}; table.insert(self.points,{...}) end
+function methods:SetPoint(...) self.pointCount=(self.pointCount or 0)+1; self.points=self.points or {}; table.insert(self.points,{...}) end
 function methods:ClearBackdrop()
     self.clearCount=(self.clearCount or 0)+1
     if NotifyLayout and addon and addon.RXPFrame.scripts.OnSizeChanged then
@@ -43,6 +43,7 @@ function methods:SetParent(p) self.parent=p end
 function methods:SetFrameLevel(n) self.level=n end
 function methods:GetFrameLevel() return self.level or 6 end
 function methods:SetText(s) self.textValue=s; if self.fontString then self.fontString.textValue=s end end
+function methods:GetText() return self.textValue end
 function methods:GetFontString() self.fontString=self.fontString or NewFrame(); return self.fontString end
 function methods:SetTexture(s) self.texture=s end
 function methods:SetNormalTexture(s) self.normal=NewFrame(); self.normal.texture=s end
@@ -211,6 +212,16 @@ addon.DockActiveItems()
 assert(item.parent==addon.RXPFrame.phyzItemClip and itemRow.phyzInlineItems==1)
 assert(item.attributes.item=='item:123' and item.width==28)
 assert(addon.activeItemFrame.alpha==0)
+assert(addon.activeItemFrame.EnableMouseArgs[1]==false)
+local anchors=item.pointCount
+addon.updateBottomFrame=false
+addon.DockActiveItems()
+assert(item.pointCount==anchors and not addon.updateBottomFrame, 'Unchanged docking must not redraw or reanchor')
+addon.SetGuideRowText(itemRow, 'Use item')
+local anchors=itemRow.text.pointCount
+local clears=itemRow.clearCount
+addon.SetGuideRowText(itemRow, 'Use item')
+assert(itemRow.text.pointCount==anchors and itemRow.clearCount==clears)
 ''')
 
 # Run the actual guide-list layout function against a long guide, rather than
@@ -233,6 +244,9 @@ for i,row in ipairs(container.framePool) do
     assert(#row.points==2 and row.points[1][2]==container and row.points[2][2]==container,
         'Every guide row must anchor to the container, never a previous row')
 end
+local anchorCount=container.framePool[55].pointCount
+layout()
+assert(container.framePool[55].pointCount==anchorCount, 'Unchanged rows must not be reanchored')
 local before=container.framePool[55].points[1][5]
 container.framePool[46].height=container.framePool[46].height+30
 layout()

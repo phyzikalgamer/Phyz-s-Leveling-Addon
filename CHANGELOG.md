@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.4 — 2026-11-17
+
+- Avoid reanchoring unchanged guide rows and item buttons during routine refreshes.
+- Refresh row text and styling only when their displayed values change.
+- Stop unchanged item docking from requesting repeated full guide redraws.
+- Disable mouse input on the transparent legacy item container so it cannot intercept world clicks.
+- Gameplay smoothness and NPC interaction require confirmation in game.
+
 ## 0.4.3 — 2026-11-17
 
 - Anchor guide-list rows directly to the scroll container instead of chaining them to every previous row.

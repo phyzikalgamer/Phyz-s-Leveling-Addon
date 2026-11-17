@@ -1541,14 +1541,18 @@ local function LayoutGuideRows()
     local y = 3
     for n, row in ipairs(ScrollChild.framePool) do
         if not row:IsShown() then break end
-        row:ClearAllPoints()
-        row:SetPoint("TOPLEFT", ScrollChild, "TOPLEFT", 2, -y)
-        row:SetPoint("TOPRIGHT", ScrollChild, "TOPRIGHT", -2, -y)
+        if row.phyzRowY ~= y then
+            row.phyzRowY = y
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", ScrollChild, "TOPLEFT", 2, -y)
+            row:SetPoint("TOPRIGHT", ScrollChild, "TOPRIGHT", -2, -y)
+        end
         if not row.phyzRowHidden then y = y + row:GetHeight() + 3 end
         stepPos[n] = y - 3
     end
     stepPos[0] = y - 3
-    ScrollChild:SetHeight(math.max(1, y - 3) + ScrollFrame:GetHeight())
+    local height = math.max(1, y - 3) + ScrollFrame:GetHeight()
+    if ScrollChild:GetHeight() ~= height then ScrollChild:SetHeight(height) end
 end
 
 
@@ -2026,6 +2030,7 @@ function addon:LoadGuide(guide, OnLoad)
             frame:SetPoint("TOPRIGHT", ScrollChild, "TOPRIGHT", -2, -3 - (n - 1) * 23)
 
             frame:ClearBackdrop()
+            frame.phyzRowY, frame.phyzStyleState, frame.phyzTextInset = nil, nil, nil
             frame:SetBackdrop(RXPFrame.backdrop.bottom)
             frame:SetBackdropColor(unpack(addon.colors.bottomFrameBG))
 
@@ -2103,7 +2108,7 @@ function addon:LoadGuide(guide, OnLoad)
 
             -- frame.text:SetHeight(1000)
 
-            -- frame.text:SetText(addon.FormatGuideRow(frame, text))
+            -- addon.SetGuideRowText(frame, text)
 
             frame:SetHeight(20)
         end
@@ -2229,7 +2234,7 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
         end
 
         if frame.text and frame.text:GetText() ~= text then
-            frame.text:SetText(addon.FormatGuideRow(frame, text))
+            addon.SetGuideRowText(frame, text)
         end
 
         if hideStep then
@@ -2320,11 +2325,11 @@ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
             if frame.text then
                 if hideStep then
                     --hiddenFrames = hiddenFrames + 1
-                    frame.text:SetText(addon.FormatGuideRow(frame, text))
+                    addon.SetGuideRowText(frame, text)
                     fheight = 1.00
                     frame:SetAlpha(0)
                 else
-                    frame.text:SetText(addon.FormatGuideRow(frame, text))
+                    addon.SetGuideRowText(frame, text)
                     fheight = math.max(math.ceil(frame.text:GetStringHeight() + 20 + (frame.phyzLocation and frame.phyzLocation:IsShown() and 16 or 0)), (frame.phyzInlineItems or 0) * 30 + 20)
                 end
             end
