@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 — 2026-11-17
+
+- Replaced the hand-built frame, portrait rim and corner art with Blizzard's native window template and a basic-template fallback.
+- Replaced stretched button textures with real UIPanelButtonTemplate controls while preserving their actions and tooltips.
+- Unified header, progress, content and footer spacing; retained completed-step colours, inline item use and docked clickable targets.
+- Removed the custom step-corner mask and unused highlight drawing, retaining native grunge and a restrained current-step tint.
+- Corrected load-time event handler registration order for Forever.
+- Added tests for native templates, fallback, forwarded button actions and event registration order.
+
 ## 0.3.5 — 2026-11-17
 
 - Dock active item buttons at the right of their owning step, with text clearance.

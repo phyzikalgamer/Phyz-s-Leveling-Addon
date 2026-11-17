@@ -19,3 +19,8 @@ Do not request permission again unless a tool requires escalation or scope chang
 - Check the GitHub Actions run and release result; report failures honestly.
 - Keep original RXPGuides and OpenXP installations and user saved variables unchanged.
 - Do not claim in-game verification without observing it.
+- The wow-addon-dev skill is installed under the user's Codex skills directory.
+  The Forever-specific reference kit is kept locally in
+  backups/developer-tools/forever-addon-kit (not bundled or published).
+  Treat its September beta findings as historical, not proof of current bugs.
+- Prefer Blizzard window/button templates over hand-built copies of stock UI art.

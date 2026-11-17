@@ -35,7 +35,8 @@ function methods:GetHeight() return self.height end
 function methods:SetParent(p) self.parent=p end
 function methods:SetFrameLevel(n) self.level=n end
 function methods:GetFrameLevel() return self.level or 6 end
-function methods:SetText(s) self.textValue=s end
+function methods:SetText(s) self.textValue=s; if self.fontString then self.fontString.textValue=s end end
+function methods:GetFontString() self.fontString=self.fontString or NewFrame(); return self.fontString end
 function methods:SetTexture(s) self.texture=s end
 function methods:SetNormalTexture(s) self.normal=NewFrame(); self.normal.texture=s end
 function methods:SetPushedTexture(s) self.pushed=NewFrame() end
@@ -56,8 +57,20 @@ function methods:SetAlpha(v) self.alpha=v end
 function methods:SetMinMaxValues(a,b) self.minimum=a; self.maximum=b end
 function methods:SetValue(v) self.value=v end
 function methods:SetScript(event,fn) self.scripts[event]=fn end
+function methods:GetScript(event) return self.scripts[event] end
 function methods:HookScript(event,fn) self.scripts[event]=fn end
-function CreateFrame() return NewFrame() end
+function methods:RegisterEvent(event)
+    assert(self.scripts.OnEvent, 'Install event handler before registering ' .. event)
+end
+function CreateFrame(kind,name,parent,template)
+    if ForceBasicFrame and template=='ButtonFrameTemplate' then error('Portrait template unavailable') end
+    local f=NewFrame(); f.template=template; f.parent=parent
+    if template=='ButtonFrameTemplate' or template=='BasicFrameTemplateWithInset' then
+        f.TitleText=NewFrame(); f.portrait=NewFrame(); f.CloseButton=NewFrame()
+    end
+    if template=='UIPanelButtonTemplate' then f.fontString=NewFrame() end
+    return f
+end
 function InCombatLockdown() return false end
 function hooksecurefunc(object,key,callback)
     local original=assert(object[key],key)
@@ -112,8 +125,14 @@ addon.settings:InitializeDatabase()
 addon.SetupGuideWindow()
 assert(addon.RXPFrame.phyzProgress.label.textValue=='STEP 9 / 20')
 assert(addon.RXPFrame.phyzProgress.value==8)
-assert(addon.RXPFrame.GuideName.phyzPortraitRing.width==54)
-assert(addon.RXPFrame.GuideName.phyzPortraitRing.points[1][1]=='CENTER')
+assert(addon.RXPFrame.phyzChrome.template=='ButtonFrameTemplate')
+assert(addon.RXPFrame.phyzChrome.TitleText.textValue=='Phyz Leveling')
+assert(addon.RXPFrame.phyzChrome.portrait.texture=='Interface/Icons/INV_Misc_Map_01')
+ForceBasicFrame=true
+addon.RXPFrame.phyzChrome=nil
+addon.SetupGuideWindow()
+assert(addon.RXPFrame.phyzChrome.template=='BasicFrameTemplateWithInset')
+ForceBasicFrame=false
 assert(addon.RXPFrame.ScrollFrame.ScrollBar.thumb.texture=='Interface/Buttons/UI-ScrollBar-Knob')
 addon.SetupArrow()
 assert(addon.arrowFrame.texture.texture=='Interface/Minimap/MinimapArrow')
@@ -121,14 +140,16 @@ assert(addon.arrowFrame.scripts.OnUpdate==nil, 'Arrow skin must not replace navi
 assert(addon.RXPFrame.Footer.cog.phyzLabel.textValue=='Settings')
 assert(addon.questCheckButton.phyzLabel.textValue=='Check quests')
 assert(not addon.RXPFrame.Footer.text.shown)
-addon.phyzCurrentButton.scripts.OnClick()
+assert(addon.phyzCurrentButton.phyzNative.template=='UIPanelButtonTemplate')
+assert(not addon.phyzCurrentButton.shown, 'Original icon must be hidden behind native replacement')
+addon.phyzCurrentButton.phyzNative.scripts.OnClick()
 assert(addon.scrolled==9 and addon.changedStep==nil, 'My step must not change progress')
 addon.RXPFrame.phyzClose.scripts.OnClick()
 assert(addon.toggled)
 for _, width in ipairs({220,400,640}) do
     addon.RXPFrame.width=width
     addon.RXPFrame.scripts.OnSizeChanged()
-    local button=addon.questCheckButton
+    local button=addon.questCheckButton.phyzNative
     assert(button.points[1][4]+button.width <= width-18, 'Footer buttons overflow')
 end
 local row=NewFrame(); row.text=NewFrame(); row.step={index=8,completed=true,elements={}}

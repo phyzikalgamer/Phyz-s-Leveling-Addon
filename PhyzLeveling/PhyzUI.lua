@@ -17,46 +17,15 @@ function addon.StyleGuideRow(frame)
         local texture = frame:CreateTexture(nil, 'BACKGROUND')
         texture:SetAllPoints(frame)
         texture:SetTexture('Interface/DialogFrame/UI-DialogBox-Background')
-        if texture.AddMaskTexture then
-            local mask = frame:CreateMaskTexture()
-            mask:SetAllPoints(frame)
-            mask:SetTexture('Interface/AddOns/' .. addonName .. '/Textures/PhyzPanelMask')
-            texture:AddMaskTexture(mask)
-            frame.phyzPanelMask = mask
-        end
         frame.phyzPanelTexture = texture
     end
     -- Native backdrop colours multiply an already dark texture. Use brighter
     -- tints here so the marble/grunge remains visible rather than becoming flat.
     frame:ClearBackdrop()
-    if not frame.phyzGlow then
-        -- Four plain one-pixel edges, inset and clipped with the row textures.
-        local textures = {}
-        for _, edge in ipairs({'TOP', 'BOTTOM', 'LEFT', 'RIGHT'}) do
-            local texture = frame:CreateTexture(nil, 'OVERLAY')
-            texture:SetColorTexture(1, 0.82, 0, 1)
-            if edge == 'TOP' or edge == 'BOTTOM' then
-                local y = edge == 'TOP' and -2 or 2
-                texture:SetPoint(edge .. 'LEFT', frame, edge .. 'LEFT', 2, y)
-                texture:SetPoint(edge .. 'RIGHT', frame, edge .. 'RIGHT', -2, y)
-                texture:SetHeight(1)
-            else
-                local x = edge == 'LEFT' and 2 or -2
-                texture:SetPoint('TOP' .. edge, frame, 'TOP' .. edge, x, -2)
-                texture:SetPoint('BOTTOM' .. edge, frame, 'BOTTOM' .. edge, x, 2)
-                texture:SetWidth(1)
-            end
-            textures[#textures + 1] = texture
-        end
-        frame.phyzGlow = {SetShown = function(_, shown)
-            for _, texture in ipairs(textures) do texture:SetShown(shown) end
-        end}
-    end
-    frame.phyzGlow:SetShown(false)
     if state == 'done' then
         frame.phyzPanelTexture:SetVertexColor(0.32, 0.31, 0.28, 1)
     elseif state == 'current' then
-        frame.phyzPanelTexture:SetVertexColor(0.85, 0.64, 0.22, 1)
+        frame.phyzPanelTexture:SetVertexColor(0.58, 0.46, 0.22, 1)
     else
         frame.phyzPanelTexture:SetVertexColor(0.65, 0.63, 0.57, 1)
     end
@@ -99,19 +68,25 @@ function addon.FormatGuideRow(frame, text)
     return '|cFFFFD100' .. title .. '|r\n' .. text
 end
 
-local function RedButton(button, label)
-    button:SetNormalTexture('Interface/Buttons/UI-Panel-Button-Up')
-    button:SetPushedTexture('Interface/Buttons/UI-Panel-Button-Down')
-    button:SetHighlightTexture('Interface/Buttons/UI-Panel-Button-Highlight', 'ADD')
-    for _, texture in ipairs({button:GetNormalTexture(), button:GetPushedTexture(), button:GetHighlightTexture()}) do
-        texture:SetTexCoord(0, 0.625, 0, 0.6875)
+local function NativeButton(button, label)
+    if not button.phyzNative then
+        local native = CreateFrame('Button', nil, addon.RXPFrame.Footer, 'UIPanelButtonTemplate')
+        native:SetScript('OnClick', function(_, mouseButton)
+            local action = button:GetScript('OnClick')
+            if action then action(button, mouseButton) end
+        end)
+        for _, event in ipairs({'OnEnter', 'OnLeave'}) do
+            local handler = button:GetScript(event)
+            if handler then native:SetScript(event, handler) end
+        end
+        button.phyzNative = native
     end
-    if not button.phyzLabel then
-        button.phyzLabel = button:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
-        button.phyzLabel:SetPoint('CENTER', 0, 1)
-    end
-    button.phyzLabel:SetText(label)
-    button.phyzLabel:SetTextColor(1, 0.82, 0)
+    local native = button.phyzNative
+    native:SetText(label)
+    button.phyzLabel = native:GetFontString()
+    button:Hide()
+    native:Show()
+    return native
 end
 
 local function SkinScrollBar()
@@ -155,55 +130,45 @@ local function Skin()
     local frame = addon.RXPFrame
     if not frame or not frame.BottomFrame then return end
     local header, footer, body = frame.GuideName, frame.Footer, frame.BottomFrame
-    frame:SetBackdrop({
-        bgFile = 'Interface/DialogFrame/UI-DialogBox-Background',
-        edgeFile = BORDER, tile = true, tileSize = 32, edgeSize = 24,
-        insets = {left = 6, right = 6, top = 6, bottom = 6},
-    })
-    frame:SetBackdropColor(0.65, 0.58, 0.42, 1)
-    frame:SetBackdropBorderColor(0.82, 0.66, 0.36, 1)
+    -- Use the actual Blizzard window template; it supplies the frame's
+    -- portrait ring, title bar, corner art, inset and close button at native UVs.
+    if not frame.phyzChrome then
+        local ok, chrome = pcall(CreateFrame, 'Frame', nil, frame, 'ButtonFrameTemplate')
+        if not ok then chrome = CreateFrame('Frame', nil, frame, 'BasicFrameTemplateWithInset') end
+        chrome:SetAllPoints(frame)
+        chrome:EnableMouse(false)
+        chrome:SetFrameLevel(frame:GetFrameLevel())
+        local title = chrome.TitleText or (chrome.TitleContainer and chrome.TitleContainer.TitleText)
+        if title then title:SetText('Phyz Leveling') end
+        local portrait = chrome.portrait or (chrome.PortraitContainer and chrome.PortraitContainer.portrait)
+        if portrait then portrait:SetTexture('Interface/Icons/INV_Misc_Map_01') end
+        local close = chrome.CloseButton or chrome.closeButton
+            or (chrome.TitleContainer and chrome.TitleContainer.CloseButton)
+        if close then
+            close:SetScript('OnClick', addon.settings.ToggleActive)
+            frame.phyzClose = close
+        end
+        frame.phyzChrome = chrome
+    end
+    frame:ClearBackdrop()
+    header:SetFrameLevel(frame:GetFrameLevel() + 4)
+    body:SetFrameLevel(frame:GetFrameLevel() + 3)
+    footer:SetFrameLevel(frame:GetFrameLevel() + 4)
     header:ClearAllPoints()
-    header:SetPoint('TOPLEFT', frame, 'TOPLEFT', 8, -7)
-    header:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -8, -7)
-    header:SetHeight(43)
-    header:SetBackdrop({bgFile = WHITE})
-    header:SetBackdropColor(0.12, 0.075, 0.025, 1)
-    header.bg:SetTexture(WHITE)
-    header.bg:SetVertexColor(0.12, 0.075, 0.025, 1)
+    header:SetPoint('TOPLEFT', frame, 'TOPLEFT', 66, -27)
+    header:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -24, -27)
+    header:SetHeight(36)
+    header:ClearBackdrop()
+    header.bg:Hide()
     header.text:ClearAllPoints()
-    header.text:SetPoint('TOPLEFT', header, 'TOPLEFT', 68, -6)
-    header.text:SetPoint('BOTTOMRIGHT', header, 'BOTTOMRIGHT', -32, 6)
+    header.text:SetAllPoints(header)
     header.text:SetFont(addon.font, 11, '')
     header.text:SetSpacing(2)
     header.text:SetWordWrap(true)
     header.text:SetTextColor(1, 0.82, 0)
+    header.icon:Hide()
     header.classIcon:Hide()
-    if not frame.phyzClose then
-        frame.phyzClose = CreateFrame('Button', nil, frame, 'UIPanelCloseButton')
-        frame.phyzClose:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -3, -3)
-        frame.phyzClose:SetSize(28, 28)
-        frame.phyzClose:SetScript('OnClick', addon.settings.ToggleActive)
-    end
-    -- A round quest portrait, modelled on the profession-window medallion.
-    header.icon:ClearAllPoints()
-    header.icon:SetPoint('CENTER', header, 'LEFT', 24, -5)
-    header.icon:SetSize(48, 48)
-    header.icon:SetTexture('Interface/Icons/INV_Misc_Map_01')
-    if not header.phyzPortraitRing then
-        if header.icon.AddMaskTexture then
-            local mask = header:CreateMaskTexture()
-            mask:SetAllPoints(header.icon)
-            mask:SetTexture('Interface/CharacterFrame/TempPortraitAlphaMask')
-            header.icon:AddMaskTexture(mask)
-            header.phyzPortraitMask = mask
-        end
-        header.phyzPortraitRing = header:CreateTexture(nil, 'OVERLAY')
-        header.phyzPortraitRing:SetTexture('Interface/AddOns/' .. addonName .. '/Textures/white_circle')
-        header.phyzPortraitRing:SetDrawLayer('BORDER')
-        header.phyzPortraitRing:SetVertexColor(0.72, 0.53, 0.24, 1)
-        header.phyzPortraitRing:SetSize(54, 54)
-        header.phyzPortraitRing:SetPoint('CENTER', header.icon, 'CENTER', 0, 0)
-    end
+    if header.phyzPortraitRing then header.phyzPortraitRing:Hide() end
     if not frame.phyzProgress then
         local progress = CreateFrame('StatusBar', nil, frame, 'BackdropTemplate')
         progress:SetStatusBarTexture('Interface/TargetingFrame/UI-StatusBar')
@@ -217,43 +182,36 @@ local function Skin()
     end
     local progress = frame.phyzProgress
     progress:ClearAllPoints()
-    progress:SetPoint('TOPLEFT', frame, 'TOPLEFT', 78, -53)
-    progress:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -18, -53)
-    progress:SetHeight(14)
+    progress:SetPoint('TOPLEFT', frame, 'TOPLEFT', 24, -69)
+    progress:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -26, -69)
+    progress:SetHeight(12)
+    progress:SetFrameLevel(frame:GetFrameLevel() + 4)
     local total = addon.currentGuide and #addon.currentGuide.steps or 0
     local current = total > 0 and math.min(addon.GetGuideProgress() or 1, total) or 0
     progress:SetMinMaxValues(0, math.max(total, 1))
     progress:SetValue(math.max(0, current - 1))
     progress.label:SetText(total > 0 and string.format('STEP %d / %d', current, total) or 'Choose a guide')
     body:ClearAllPoints()
-    body:SetPoint('TOPLEFT', frame, 'TOPLEFT', 9, -78)
-    body:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -9, 39)
-    body:SetBackdrop({
-        bgFile = 'Interface/DialogFrame/UI-DialogBox-Background',
-        edgeFile = 'Interface/Tooltips/UI-Tooltip-Border', tile = true, tileSize = 32, edgeSize = 8,
-        insets = {left = 2, right = 2, top = 2, bottom = 2},
-    })
-    body:SetBackdropColor(0.8, 0.8, 0.74, 1)
-    body:SetBackdropBorderColor(0.45, 0.36, 0.19, 1)
+    body:SetPoint('TOPLEFT', frame, 'TOPLEFT', 16, -91)
+    body:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -20, 42)
+    body:ClearBackdrop()
     footer:ClearAllPoints()
-    footer:SetPoint('BOTTOMLEFT', frame, 'BOTTOMLEFT', 9, 9)
-    footer:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -9, 9)
+    footer:SetPoint('BOTTOMLEFT', frame, 'BOTTOMLEFT', 16, 12)
+    footer:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -20, 12)
     footer:SetHeight(25)
-    footer:SetBackdrop({bgFile = WHITE})
-    footer:SetBackdropColor(0.10, 0.09, 0.065, 1)
-    footer.bg:SetTexture(WHITE)
-    footer.bg:SetVertexColor(0.10, 0.09, 0.065, 1)
+    footer:ClearBackdrop()
+    footer.bg:Hide()
     footer.text:Hide()
     footer.cog:SetParent(footer)
     local buttons = {footer.cog, addon.phyzCurrentButton, addon.questCheckButton}
     local labels = {'Settings', 'My step', 'Check quests'}
-    local width = math.max(50, (frame:GetWidth() - 46) / 3)
+    local width = math.max(42, (frame:GetWidth() - 58) / 3)
     for i, button in ipairs(buttons) do
-        RedButton(button, labels[i])
-        button:ClearAllPoints()
-        button:SetPoint('LEFT', footer, 'LEFT', 4 + (i - 1) * (width + 7), 0)
-        button:SetSize(width, 23)
-        button:SetFrameLevel(footer:GetFrameLevel() + 2)
+        local native = NativeButton(button, labels[i])
+        native:ClearAllPoints()
+        native:SetPoint('LEFT', footer, 'LEFT', (i - 1) * (width + 7), 0)
+        native:SetSize(width, 23)
+        native:SetFrameLevel(footer:GetFrameLevel() + 2)
     end
     footer.icon:ClearAllPoints()
     footer.icon:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -2, 2)
@@ -412,18 +370,18 @@ function addon.DockActiveTargets()
         panel.caption:SetPoint('TOPLEFT', panel, 'TOPLEFT', 44, -30)
         panel.caption:SetPoint('RIGHT', panel, 'RIGHT', -10, 0)
     end
-    frame.BottomFrame:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -9, 48 + height)
+    frame.BottomFrame:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -20, 51 + height)
 end
 hooksecurefunc(addon.targeting, 'CreateTargetFrame', addon.DockActiveTargets)
 hooksecurefunc(addon.targeting, 'UpdateTargetFrame', addon.DockActiveTargets)
 local dockEvents = CreateFrame('Frame')
-dockEvents:RegisterEvent('PLAYER_REGEN_ENABLED')
-dockEvents:RegisterEvent('PLAYER_ENTERING_WORLD')
 dockEvents:SetScript('OnEvent', function()
     if addon.targeting.activeTargetFrame then addon.targeting:UpdateTargetFrame() end
     addon.DockActiveTargets()
     addon.DockActiveItems()
 end)
+dockEvents:RegisterEvent('PLAYER_REGEN_ENABLED')
+dockEvents:RegisterEvent('PLAYER_ENTERING_WORLD')
 
 local footer = addon.RXPFrame.Footer
 local currentButton = CreateFrame('Button', nil, footer)
