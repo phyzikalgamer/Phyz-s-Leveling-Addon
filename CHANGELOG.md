@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.4 — 2026-11-17
+
+- Restored visible native grunge texture in the step panels with brighter texture tints.
+- Added a small chamfer mask for clipped panel corners, preserving border-free highlighting.
+- Includes v0.3.3's extra right-side scrollbar clearance.
+
 ## 0.3.3 — 2026-11-17
 
 - Added 10px of right-side clearance between guide rows and the scrollbar area.

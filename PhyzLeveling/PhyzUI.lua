@@ -13,6 +13,22 @@ end
 function addon.StyleGuideRow(frame)
     if not frame.step then return end
     local state = RowState(frame.step)
+    if not frame.phyzPanelTexture then
+        local texture = frame:CreateTexture(nil, 'BACKGROUND')
+        texture:SetAllPoints(frame)
+        texture:SetTexture('Interface/DialogFrame/UI-DialogBox-Background')
+        if texture.AddMaskTexture then
+            local mask = frame:CreateMaskTexture()
+            mask:SetAllPoints(frame)
+            mask:SetTexture('Interface/AddOns/' .. addonName .. '/Textures/PhyzPanelMask')
+            texture:AddMaskTexture(mask)
+            frame.phyzPanelMask = mask
+        end
+        frame.phyzPanelTexture = texture
+    end
+    -- Native backdrop colours multiply an already dark texture. Use brighter
+    -- tints here so the marble/grunge remains visible rather than becoming flat.
+    frame:ClearBackdrop()
     if not frame.phyzGlow then
         -- Four plain one-pixel edges, inset and clipped with the row textures.
         local textures = {}
@@ -38,11 +54,11 @@ function addon.StyleGuideRow(frame)
     end
     frame.phyzGlow:SetShown(false)
     if state == 'done' then
-        frame:SetBackdropColor(0.025, 0.022, 0.018, 1)
+        frame.phyzPanelTexture:SetVertexColor(0.32, 0.31, 0.28, 1)
     elseif state == 'current' then
-        frame:SetBackdropColor(0.20, 0.14, 0.025, 1)
+        frame.phyzPanelTexture:SetVertexColor(0.85, 0.64, 0.22, 1)
     else
-        frame:SetBackdropColor(unpack(addon.colors.bottomFrameBG))
+        frame.phyzPanelTexture:SetVertexColor(0.65, 0.63, 0.57, 1)
     end
 end
 
@@ -216,7 +232,7 @@ local function Skin()
         edgeFile = 'Interface/Tooltips/UI-Tooltip-Border', tile = true, tileSize = 32, edgeSize = 8,
         insets = {left = 2, right = 2, top = 2, bottom = 2},
     })
-    body:SetBackdropColor(0.45, 0.45, 0.42, 1)
+    body:SetBackdropColor(0.8, 0.8, 0.74, 1)
     body:SetBackdropBorderColor(0.45, 0.36, 0.19, 1)
     footer:ClearAllPoints()
     footer:SetPoint('BOTTOMLEFT', frame, 'BOTTOMLEFT', 9, 9)
