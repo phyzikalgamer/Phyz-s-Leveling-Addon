@@ -123,7 +123,7 @@ local function SkinArrow()
     arrow.text:SetFont(addon.font, math.max(11, p and p.arrowText or 9), 'OUTLINE')
 end
 
-local function Skin()
+local function ApplySkin()
     if InCombatLockdown() then return end
     if not addon.activeTheme or addon.activeTheme.name ~= 'WoW Classic' then return end
     if addon.v2 and addon.v2:IsGuideWindowEnabled() then return end
@@ -219,6 +219,34 @@ local function Skin()
     if addon.DockActiveTargets then addon.DockActiveTargets() end
 end
 
+local skinRunning, skinPending = false, false
+local function Skin()
+    if skinRunning then return end
+    skinRunning = true
+    local ok, message = pcall(ApplySkin)
+    skinRunning = false
+    if not ok then error(message) end
+end
+
+local function ScheduleSkin()
+    if skinRunning or skinPending then return end
+    skinPending = true
+    C_Timer.After(0, function()
+        skinPending = false
+        Skin()
+    end)
+end
+
+local function UpdateProgress()
+    local bar = addon.RXPFrame.phyzProgress
+    if not bar then return end
+    local total = addon.currentGuide and #addon.currentGuide.steps or 0
+    local current = total > 0 and math.min(addon.GetGuideProgress() or 1, total) or 0
+    bar:SetMinMaxValues(0, math.max(total, 1))
+    bar:SetValue(math.max(0, current - 1))
+    bar.label:SetText(total > 0 and string.format('STEP %d / %d', current, total) or 'Choose a guide')
+end
+
 -- Run after upstream refreshes so its banner never covers the native colours.
 hooksecurefunc(addon, 'SetupGuideWindow', Skin)
 hooksecurefunc(addon.RXPFrame, 'UpdateVisuals', Skin)
@@ -279,7 +307,6 @@ function addon.DockActiveItems()
     if changed then addon.updateBottomFrame = true end
 end
 hooksecurefunc(addon, 'UpdateItemFrame', addon.DockActiveItems)
-hooksecurefunc(addon, 'SetStep', addon.DockActiveItems)
 
 local function SkinTargets()
     if InCombatLockdown() then return end
@@ -404,8 +431,10 @@ end)
 currentButton:SetScript('OnLeave', function() GameTooltip:Hide() end)
 addon.phyzCurrentButton = currentButton
 
-hooksecurefunc(addon, 'SetStep', Skin)
-addon.RXPFrame:HookScript('OnSizeChanged', Skin)
+-- Step advancement must not rebuild/reparent the entire UI synchronously.
+-- Item and target updates already have their own completion hooks.
+hooksecurefunc(addon, 'SetStep', UpdateProgress)
+addon.RXPFrame:HookScript('OnSizeChanged', ScheduleSkin)
 
 function addon.UpdateActiveStepVisibility()
     local p = addon.settings and addon.settings.profile

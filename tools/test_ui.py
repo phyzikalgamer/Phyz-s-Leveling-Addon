@@ -25,6 +25,12 @@ for _, name in ipairs({'SetBackdrop','SetBackdropColor','SetBackdropBorderColor'
     methods[name] = function(self, ...) self[name .. 'Args'] = {...} end
 end
 function methods:SetPoint(...) self.points=self.points or {}; table.insert(self.points,{...}) end
+function methods:ClearBackdrop()
+    self.clearCount=(self.clearCount or 0)+1
+    if NotifyLayout and addon and addon.RXPFrame.scripts.OnSizeChanged then
+        addon.RXPFrame.scripts.OnSizeChanged()
+    end
+end
 function methods:ClearAllPoints() self.points={} end
 function methods:SetAllPoints() end
 function methods:SetSize(w,h) self.width=w; self.height=h end
@@ -108,14 +114,22 @@ function addon.UpdateItemFrame() end
 function addon.OnInitialize() end
 function addon.RenderFrame() end
 function addon.UpdateGuideFontSize() end
-function addon.SetStep(n) addon.changedStep=n end
-function addon.GetGuideProgress() return 9 end
+progressIndex=9
+function addon.SetStep(n) addon.changedStep=n; progressIndex=n end
+function addon.GetGuideProgress() return progressIndex end
 function addon.settings:InitializeDatabase() end
 function addon.settings.ToggleActive() addon.toggled=true end
 function addon.targeting:CreateTargetFrame() end
 function addon.targeting:UpdateTargetFrame() end
 addon.currentGuide={steps={}}
 for i=1,20 do addon.currentGuide.steps[i]={index=i} end
+local pending={}
+C_Timer={After=function(_,fn) pending[#pending+1]=fn end}
+function PendingTimers() return #pending end
+function RunPendingTimers()
+    local batch=pending; pending={}
+    for _, fn in ipairs(batch) do fn() end
+end
 ''')
 lua.execute("assert(loadstring(...))('PhyzLeveling', addon)", (ROOT / 'PhyzLeveling' / 'PhyzUI.lua').read_text(encoding='utf-8'))
 lua.execute(r'''
@@ -149,9 +163,23 @@ assert(addon.toggled)
 for _, width in ipairs({220,400,640}) do
     addon.RXPFrame.width=width
     addon.RXPFrame.scripts.OnSizeChanged()
+    RunPendingTimers()
     local button=addon.questCheckButton.phyzNative
     assert(button.points[1][4]+button.width <= width-18, 'Footer buttons overflow')
 end
+-- Regression: resize bursts schedule only one layout; layout-triggered callbacks
+-- cannot recursively enter layout or schedule a perpetual chain of work.
+for i=1,20 do addon.RXPFrame.scripts.OnSizeChanged() end
+assert(PendingTimers()==1)
+NotifyLayout=true
+RunPendingTimers()
+assert(PendingTimers()==0, 'Layout re-entry must not schedule another resize')
+local before=addon.RXPFrame.clearCount
+for i=10,20 do addon.SetStep(i) end
+assert(addon.RXPFrame.clearCount==before, 'Advancing steps must not rebuild window chrome')
+assert(addon.RXPFrame.phyzProgress.label.textValue=='STEP 20 / 20')
+NotifyLayout=false
+progressIndex=9
 local row=NewFrame(); row.text=NewFrame(); row.step={index=8,completed=true,elements={}}
 assert(addon.FormatGuideRow(row,'|cFF00FF00Talk to NPC|r'):find('|cFF888888',1,true))
 assert(not addon.FormatGuideRow(row,'|cFF00FF00Talk to NPC|r'):find('FF00FF00',1,true))

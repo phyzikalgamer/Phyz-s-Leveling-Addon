@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.2 — 2026-11-17
+
+- Removed full layout rebuilding and duplicate item docking from step-advance hooks.
+- Added layout re-entry protection and coalesced resize updates to the next frame.
+- Retained lightweight progress updates and native item/target refresh hooks.
+- Preventive hardening after an Error #109 freeze report; the report does not identify a confirmed root cause.
+
 ## 0.4.1 — 2026-11-17
 
 - Rewrote repository and packaged READMEs for players, covering features, installation, controls, guide availability and support.
