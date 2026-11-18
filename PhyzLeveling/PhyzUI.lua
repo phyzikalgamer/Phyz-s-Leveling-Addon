@@ -2,8 +2,23 @@ local addonName, addon = ...
 local WHITE = 'Interface/Buttons/WHITE8X8'
 local BORDER = 'Interface/DialogFrame/UI-DialogBox-Border'
 
-local function RowState(step)
+-- The engine's progress is the main quest sequence. Sticky tasks can remain
+-- active before it, and should be the first unfinished step presented to users.
+function addon.GetCurrentGuideStep()
     local current = addon.GetGuideProgress() or 1
+    for _, step in ipairs(addon.RXPFrame.activeSteps or {}) do
+        if step.index and step.index < current and step.active and not step.tip
+            and not step.completed
+            and not (PHYZ2CData and PHYZ2CData.stepSkip and PHYZ2CData.stepSkip[step.index])
+            and not (addon.IsQuestCheckedStep and addon.IsQuestCheckedStep(step)) then
+            current = step.index
+        end
+    end
+    return current
+end
+
+local function RowState(step)
+    local current = addon.GetCurrentGuideStep()
     if step.completed or (addon.IsQuestCheckedStep and addon.IsQuestCheckedStep(step))
         or (PHYZ2CData and PHYZ2CData.stepSkip and PHYZ2CData.stepSkip[step.index])
         or (not step.sticky and step.index < current) then return 'done' end
@@ -201,7 +216,7 @@ local function ApplySkin()
     progress:SetHeight(12)
     progress:SetFrameLevel(frame:GetFrameLevel() + 4)
     local total = addon.currentGuide and #addon.currentGuide.steps or 0
-    local current = total > 0 and math.min(addon.GetGuideProgress() or 1, total) or 0
+    local current = total > 0 and math.min(addon.GetCurrentGuideStep(), total) or 0
     progress:SetMinMaxValues(0, math.max(total, 1))
     progress:SetValue(math.max(0, current - 1))
     progress.label:SetText(total > 0 and string.format('STEP %d / %d', current, total) or 'Choose a guide')
@@ -255,7 +270,7 @@ local function UpdateProgress()
     local bar = addon.RXPFrame.phyzProgress
     if not bar then return end
     local total = addon.currentGuide and #addon.currentGuide.steps or 0
-    local current = total > 0 and math.min(addon.GetGuideProgress() or 1, total) or 0
+    local current = total > 0 and math.min(addon.GetCurrentGuideStep(), total) or 0
     bar:SetMinMaxValues(0, math.max(total, 1))
     bar:SetValue(math.max(0, current - 1))
     bar.label:SetText(total > 0 and string.format('STEP %d / %d', current, total) or 'Choose a guide')
@@ -444,7 +459,7 @@ currentButton:SetHighlightTexture('Interface/Buttons/ButtonHilight-Square', 'ADD
 currentButton:SetScript('OnClick', function()
     if addon.currentGuide then
         addon.RXPFrame.BottomFrame.UpdateFrame()
-        addon.RXPFrame.BottomFrame:StepScroll(addon.GetGuideProgress())
+        addon.RXPFrame.BottomFrame:StepScroll(addon.GetCurrentGuideStep())
     end
 end)
 currentButton:SetScript('OnEnter', function(self)

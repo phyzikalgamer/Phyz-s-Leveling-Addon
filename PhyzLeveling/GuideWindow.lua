@@ -434,7 +434,7 @@ local stepPos = {}
 function BottomFrame:StepScroll(n)
     if addon.v2:IsGuideWindowEnabled() then return end
 
-    n = addon.GetGuideProgress() or n
+    n = addon.GetCurrentGuideStep and addon.GetCurrentGuideStep() or addon.GetGuideProgress() or n
     local step = addon.currentGuide and addon.currentGuide.steps[n]
     local row = ScrollChild.framePool[n]
     if not step or not row or not IsFrameShown(nil, step) then return end
@@ -1513,7 +1513,7 @@ end
 
 hooksecurefunc(ScrollFrame.ScrollBar, "SetValue", function(self, value)
     local scroll = math.max(0, ScrollChild:GetHeight() - ScrollFrame:GetHeight())
-    local currentStep = addon.GetGuideProgress()
+    local currentStep = addon.GetCurrentGuideStep and addon.GetCurrentGuideStep() or addon.GetGuideProgress()
     local row = ScrollChild.framePool[currentStep]
     local zero = addon.settings.profile.hideCompletedSteps and row
         and math.max(0, row.phyzRowY or 0) or 0

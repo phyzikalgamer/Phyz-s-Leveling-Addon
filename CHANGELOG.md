@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.6 — 2026-11-18
+
+- My step, the current-step highlight and header counter now prefer the earliest unfinished active task, including sticky steps before the main sequence counter.
+- Preserve engine progress and exclude completed or skipped active tasks from this selection.
+
 ## 0.4.5 — 2026-11-18
 
 - Align My step using the current calculated row offset rather than stale native screen coordinates after a guide refresh.

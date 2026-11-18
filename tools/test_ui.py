@@ -289,3 +289,29 @@ assert(viewport.ScrollBar.value==13000, 'Repeated clicks must follow changed wra
 assert(engine.GetGuideProgress()==105, 'Scrolling must preserve progress')
 ''')
 print('Current-step scrolling: stale screen coordinates and changed row offsets passed.')
+
+lua.execute(r'''
+-- Main sequence 105 with unfinished sticky steps 102-104: the displayed
+-- current step must follow the earliest active task, not the main counter.
+progressIndex=105
+for i=21,126 do addon.currentGuide.steps[i]={index=i} end
+local travel={index=102,active=true,sticky=true,elements={}}
+local rare={index=103,active=true,sticky=true,elements={}}
+local completed={index=101,active=true,sticky=true,completed=true}
+addon.RXPFrame.activeSteps={rare,completed,travel}
+assert(addon.GetCurrentGuideStep()==102)
+addon.phyzCurrentButton.phyzNative.scripts.OnClick()
+assert(addon.scrolled==102 and progressIndex==105, 'My step must show active sticky tasks without rewinding engine progress')
+addon.SetStep(105)
+assert(addon.RXPFrame.phyzProgress.label.textValue=='STEP 102 / 126')
+local row=NewFrame(); row.text=NewFrame(); row.step=travel
+addon.FormatGuideRow(row,'Travel')
+assert(row.phyzStyleState=='current')
+travel.completed=true
+assert(addon.GetCurrentGuideStep()==103)
+PHYZ2CData.stepSkip[103]=true
+assert(addon.GetCurrentGuideStep()==105)
+PHYZ2CData.stepSkip[103]=nil
+addon.RXPFrame.activeSteps={}
+''')
+print('Sticky-step regression: engine progress 105, active step 102, completion and skipped tasks passed.')
