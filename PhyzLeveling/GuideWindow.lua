@@ -431,28 +431,21 @@ RXPFrame:EnableMouse(1)
 
 local stepPos = {}
 
-local lastScrollValue
 function BottomFrame:StepScroll(n)
     if addon.v2:IsGuideWindowEnabled() then return end
 
-    -- Use the row's real top edge, not a percentage of accumulated heights.
-    -- The latter drifts as objectives wrap or change their height.
     n = addon.GetGuideProgress() or n
     local step = addon.currentGuide and addon.currentGuide.steps[n]
     local row = ScrollChild.framePool[n]
     if not step or not row or not IsFrameShown(nil, step) then return end
-    local top, rowTop = ScrollChild:GetTop(), row:GetTop()
-    if not top or not rowTop then return end
-    local value = math.max(0, top - rowTop)
+    -- LayoutGuideRows records offsets synchronously. GetTop can still describe
+    -- the previous native layout immediately after wrapped text is refreshed.
+    local value = row.phyzRowY
+    if not value then return end
+    value = math.max(0, value)
     local maximum = math.max(0, ScrollChild:GetHeight() - ScrollFrame:GetHeight())
     ScrollFrame.ScrollBar:SetMinMaxValues(0, math.max(maximum, value))
     ScrollFrame.ScrollBar:SetValue(value)
-
-    value = math.floor(value+0.5)
-    if value ~= lastScrollValue then
-        addon.ScheduleTask(0,BottomFrame.StepScroll,n)
-    end
-    lastScrollValue = value
 end
 
 RXPFrame:SetWidth(addon.width)
@@ -1522,9 +1515,8 @@ hooksecurefunc(ScrollFrame.ScrollBar, "SetValue", function(self, value)
     local scroll = math.max(0, ScrollChild:GetHeight() - ScrollFrame:GetHeight())
     local currentStep = addon.GetGuideProgress()
     local row = ScrollChild.framePool[currentStep]
-    local top, rowTop = ScrollChild:GetTop(), row and row:GetTop()
-    local zero = addon.settings.profile.hideCompletedSteps and top and rowTop
-        and math.max(0, top - rowTop) or 0
+    local zero = addon.settings.profile.hideCompletedSteps and row
+        and math.max(0, row.phyzRowY or 0) or 0
     if scroll < zero then scroll = zero end
     if scroll <= value then ScrollFrame.ScrollBar.ScrollDownButton:Disable() end
     ScrollFrame.ScrollBar:SetMinMaxValues(zero, scroll)

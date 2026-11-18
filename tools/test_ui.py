@@ -265,3 +265,27 @@ assert(visits==3)
 ''')
 print(f'Lua 5.1 syntax: {len(files)} files passed; UI lifecycle, progress, controls, widths and completed colours passed.')
 print('Long-guide regression: 209 flat-anchored rows; step 46/55 reflow, hidden rows and final-step spacing passed.')
+
+# Exercise the actual scroll method with deliberately stale screen coordinates.
+scroll = re.search(r'function BottomFrame:StepScroll\(n\).*?^end', source, re.M | re.S)[0]
+lua.globals().scroll_factory = lua.execute('return function(addon, BottomFrame, ScrollChild, ScrollFrame, IsFrameShown)\n' + scroll + '\nreturn BottomFrame end')
+lua.execute(r'''
+local container, viewport, bottom=NewFrame(),NewFrame(),NewFrame()
+container.height=20000; viewport.height=300; viewport.ScrollBar=NewFrame()
+local row=NewFrame(); row.phyzRowY=12345
+-- Screen coordinates intentionally disagree with the new calculated layout.
+function container:GetTop() return 100 end
+function row:GetTop() return -11000 end
+container.framePool={[105]=row}
+local engine={currentGuide={steps={[105]={index=105}}},v2={}}
+function engine.GetGuideProgress() return 105 end
+function engine.v2:IsGuideWindowEnabled() return false end
+scroll_factory(engine,bottom,container,viewport,function() return true end)
+bottom:StepScroll(102)
+assert(viewport.ScrollBar.value==12345, 'Scroll must use current row layout, not stale screen coordinates')
+row.phyzRowY=13000
+bottom:StepScroll()
+assert(viewport.ScrollBar.value==13000, 'Repeated clicks must follow changed wrapping')
+assert(engine.GetGuideProgress()==105, 'Scrolling must preserve progress')
+''')
+print('Current-step scrolling: stale screen coordinates and changed row offsets passed.')

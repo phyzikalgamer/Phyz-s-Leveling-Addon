@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.5 — 2026-11-18
+
+- Align My step using the current calculated row offset rather than stale native screen coordinates after a guide refresh.
+- Remove coordinate-based scroll retries; preserve guide progress and the flat row layout.
+
 ## 0.4.4 — 2026-11-17
 
 - Avoid reanchoring unchanged guide rows and item buttons during routine refreshes.
