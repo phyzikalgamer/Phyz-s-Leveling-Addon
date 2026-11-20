@@ -2674,35 +2674,31 @@ function addon.functions.home(self, ...)
         return element
     end
 
-    if not addon.settings.profile.enableBindAutomation or IsShiftKeyDown() then return end
-
     local element = self.element
     if not element.step.active or element.completed or element.skip then
         element.confirm = false
         return
     end
     local event = ...
-    if (event == nil and element.step.active) then
-        local g = GossipGetOptions()
-        if type(g) == "table" and #g > 0 then
-            event = "GOSSIP_SHOW"
-        end
-    end
+    -- Observe successful manual binds even when automation is disabled or Shift
+    -- is held. Selecting gossip or showing a confirmation is not completion.
     if event == "HEARTHSTONE_BOUND" or element.location and element.location == GetBindLocation() then
         addon.SetElementComplete(self)
         element.confirm = false
-    elseif event == "CONFIRM_BINDER" then
-        if C_PlayerInteractionManager and C_PlayerInteractionManager.ConfirmationInteraction then
-            self:SetScript("OnUpdate", function()
-                C_PlayerInteractionManager.ConfirmationInteraction(Enum.PlayerInteractionType.Binder)
-                C_PlayerInteractionManager.ClearInteraction(Enum.PlayerInteractionType.Binder)
-                self:SetScript("OnUpdate",nil)
-            end)
-        elseif _G.ConfirmBinder then
-            _G.ConfirmBinder()
-        end
+        return
+    end
+    if not addon.settings.profile.enableBindAutomation or IsShiftKeyDown() then return end
+
+    if event == "GOSSIP_SHOW" then
+        element.confirm = false
+    elseif event == nil and not element.confirm then
+        local options = GossipGetOptions()
+        if type(options) == "table" and #options > 0 then event = "GOSSIP_SHOW" end
+    end
+    if event == "CONFIRM_BINDER" then
+        -- Let Blizzard's confirmation handle acceptance/cancellation. Hiding
+        -- its popup and clearing the interaction can cancel the pending bind.
         element.confirm = true
-        _G.StaticPopup1:Hide()
     elseif not element.confirm and event == "GOSSIP_SHOW" then
         addon.SelectGossipType("binder")
     end

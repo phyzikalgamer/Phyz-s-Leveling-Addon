@@ -315,3 +315,48 @@ PHYZ2CData.stepSkip[103]=nil
 addon.RXPFrame.activeSteps={}
 ''')
 print('Sticky-step regression: engine progress 105, active step 102, completion and skipped tasks passed.')
+
+# Execute the real home handler; reject any attempts to dismiss or synthesize
+# confirmation, then verify completion only after server acknowledgement.
+home_source = (ROOT / 'PhyzLeveling' / 'functions.lua').read_text(encoding='utf-8')
+home = re.search(r'function addon.functions.home\(self, \.\.\.\).*?^end', home_source, re.M | re.S)[0]
+lua.execute('addon.functions={}\n' + home)
+lua.execute(r'''
+function IsShiftKeyDown() return shiftHeld end
+function GetBindLocation() return bindLocation or 'Orgrimmar' end
+function GossipGetOptions() return {{type='binder'}} end
+local selections=0
+function addon.SelectGossipType(kind) assert(kind=='binder'); selections=selections+1 end
+function addon.SetElementComplete(frame) frame.element.completed=true end
+local function forbidden() error('Home automation must preserve native confirmation') end
+C_PlayerInteractionManager={ConfirmationInteraction=forbidden,ClearInteraction=forbidden}
+ConfirmBinder=forbidden
+StaticPopup1={Hide=forbidden}
+local frame=NewFrame(); frame.element={step={active=true},location='Camp Taurajo'}
+addon.settings.profile.enableBindAutomation=true
+addon.functions.home(frame,'GOSSIP_SHOW')
+assert(selections==1 and not frame.element.completed)
+addon.functions.home(frame,'CONFIRM_BINDER')
+assert(not frame.element.completed and not frame.scripts.OnUpdate)
+addon.functions.home(frame)
+assert(selections==1, 'Do not reselect gossip while confirmation is open')
+-- Reopening after cancellation permits another attempt.
+addon.functions.home(frame,'GOSSIP_SHOW')
+assert(selections==2)
+addon.functions.home(frame,'CONFIRM_BINDER')
+addon.functions.home(frame,'HEARTHSTONE_BOUND')
+assert(frame.element.completed)
+frame.element.completed=nil; frame.element.confirm=false
+addon.settings.profile.enableBindAutomation=false
+addon.functions.home(frame,'GOSSIP_SHOW')
+assert(selections==2)
+addon.functions.home(frame,'HEARTHSTONE_BOUND')
+assert(frame.element.completed, 'Manual binds must still complete the guide step')
+frame.element.completed=nil; shiftHeld=true
+addon.settings.profile.enableBindAutomation=true
+bindLocation='Camp Taurajo'
+addon.functions.home(frame)
+assert(frame.element.completed, 'Existing bind location must be recognized with Shift held')
+shiftHeld=false
+''')
+print('Inn binding: native confirmation preserved; cancellation/retry and manual completion passed.')

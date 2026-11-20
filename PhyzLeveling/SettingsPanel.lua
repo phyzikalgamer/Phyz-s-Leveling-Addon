@@ -917,7 +917,7 @@ function addon.settings:CreateAceOptionsPanel()
                     enableBindAutomation = {
                         name = L("Innkeeper Bind automation"), -- TODO locale
                         desc =
-                            L"Allows the guide to automatically set your home at an Innkeeper",
+                            L"Selects the Innkeeper home option automatically. Accept the game confirmation to set your Hearthstone.",
                         type = "toggle",
                         width = optionsWidth,
                         order = 4.6

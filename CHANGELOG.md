@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.7 — 2026-11-20
+
+- Keep the native innkeeper confirmation dialog available instead of hiding it and clearing the pending interaction. Accept the dialog to bind your Hearthstone.
+- Recognize successful manual bindings even with bind automation disabled or Shift held.
+- Clarify the bind automation setting: it selects the home option; the player confirms the bind.
+
 ## 0.4.6 — 2026-11-18
 
 - My step, the current-step highlight and header counter now prefer the earliest unfinished active task, including sticky steps before the main sequence counter.
