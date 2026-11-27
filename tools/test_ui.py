@@ -360,3 +360,47 @@ assert(frame.element.completed, 'Existing bind location must be recognized with 
 shiftHeld=false
 ''')
 print('Inn binding: native confirmation preserved; cancellation/retry and manual completion passed.')
+
+# Load the actual completion helpers and exercise persistent manual overrides.
+lua.execute("assert(loadstring(...))('PhyzLeveling', addon)", (ROOT / 'PhyzLeveling' / 'PhyzQuestCheck.lua').read_text(encoding='utf-8'))
+lua.execute(r'''
+local guide={key='manual-test',steps={}}
+for i=1,65 do guide.steps[i]={index=i,stepId='manual-'..i,elements={}} end
+addon.currentGuide=guide
+progressIndex=65
+local step=guide.steps[59]; step.sticky=true; step.active=true
+step.elements={{tag='deathskip',completed=false}}
+addon.RXPFrame.activeSteps={step,guide.steps[65]}
+addon.SetManualStepCompletion(59,true)
+assert(addon.IsManuallyCompletedStep(step) and addon.IsQuestCheckedStep(step))
+assert(PHYZ2CData.stepSkip[59] and addon.GetCurrentGuideStep()==65)
+-- Simulate a reload/switch clearing transient flags, retaining SavedVariables.
+step.completed=nil; PHYZ2CData.stepSkip={}
+assert(addon.IsQuestCheckedStep(step), 'Manual completion must survive transient state resets')
+step.stepId='different-step'
+assert(not addon.IsManuallyCompletedStep(step), 'Different instructions must not inherit the mark')
+step.stepId='manual-59'
+addon.SetManualStepCompletion(59,false)
+assert(not addon.IsQuestCheckedStep(step) and not PHYZ2CData.stepSkip[59])
+assert(not step.elements[1].completed and addon.GetCurrentGuideStep()==59)
+step.sticky=false; step.active=nil
+addon.SetManualStepCompletion(59,false)
+assert(progressIndex==59, 'Reopening an ordinary step must return to it')
+addon.SetManualStepCompletion(59,true)
+assert(progressIndex==60, 'Completing an ordinary current step must advance')
+local other={key='other-guide',steps=guide.steps}
+assert(not addon.IsManuallyCompletedStep(step,other), 'Marks must stay scoped to their guide')
+''')
+menu = re.search(r'RXPFrame.bottomMenu = \{.*?^\}', source, re.M | re.S)[0]
+lua.execute('local RXPFrame=addon.RXPFrame; local L=function(s) return s end\n' + menu)
+lua.execute(r'''
+local menu=addon.RXPFrame.bottomMenu
+local calls={}
+addon.SetManualStepCompletion=function(index,value) calls[#calls+1]={index,value} end
+for _, entry in ipairs(menu) do
+    if entry.phyzCompletion then entry.arg1=59; entry.func(NewFrame(),entry.arg1) end
+end
+assert(#calls==2 and calls[1][1]==59 and calls[1][2]==true and calls[2][2]==false,
+    'Context menu actions must address the clicked step and support both states')
+''')
+print('Manual completion: sticky tasks, undo, persistent marks, guide scoping and context menu actions passed.')

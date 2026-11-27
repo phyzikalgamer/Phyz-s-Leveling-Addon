@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.8 — 2026-11-26
+
+- Add Mark as complete and Mark as not complete to the step context menu.
+- Remember manual completions per character and guide; exclude completed sticky tasks from active navigation.
+- Reopening clears the manual mark and reactivates the task; normal automatic objective checks still apply.
+
 ## 0.4.7 — 2026-11-20
 
 - Keep the native innkeeper confirmation dialog available instead of hiding it and clearing the pending interaction. Accept the dialog to bind your Hearthstone.

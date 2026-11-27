@@ -846,7 +846,8 @@ function addon.SetStep(n, n2, loopback)
                                     (req.active or
                                         (req.sticky and
                                             not PHYZ2CData.stepSkip[req.index])))
-            if not PHYZ2CData.stepSkip[i] and step.reqFulfilled and level >=
+            if not PHYZ2CData.stepSkip[i] and
+                not (addon.IsQuestCheckedStep and addon.IsQuestCheckedStep(step, guide)) and step.reqFulfilled and level >=
                 step.level then
                 tinsert(activeSteps, step)
                 if n > 1 then scrollHeight = n - 1 end
@@ -1572,6 +1573,16 @@ RXPFrame.bottomMenu = {
         arg1 = 1
     }, {
         notCheckable = 1,
+        text = "Mark as complete",
+        phyzCompletion = true,
+        func = function(_, index) addon.SetManualStepCompletion(index, true) end
+    }, {
+        notCheckable = 1,
+        text = "Mark as not complete",
+        phyzCompletion = true,
+        func = function(_, index) addon.SetManualStepCompletion(index, false) end
+    }, {
+        notCheckable = 1,
         text = L("Select another guide"),
         func = RXPFrame.DropDownMenu
     }, {
@@ -2054,6 +2065,9 @@ function addon:LoadGuide(guide, OnLoad)
 
                     bottomMenu[1].text = L("Go to step") .. " " .. n
                     bottomMenu[1].arg1 = n
+                    for _, entry in ipairs(bottomMenu) do
+                        if entry.phyzCompletion then entry.arg1 = n end
+                    end
                     bottomMenu[feedbackMenuIndex].arg1 = n
                     addon:ShowMenu(bottomMenu, MenuFrame, "cursor", 0, 0, "MENU")
                 else
