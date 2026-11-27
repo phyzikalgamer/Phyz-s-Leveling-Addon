@@ -143,7 +143,7 @@ assert(addon.RXPFrame.phyzProgress.label.textValue=='STEP 9 / 20')
 assert(addon.RXPFrame.phyzProgress.value==8)
 assert(addon.RXPFrame.phyzChrome.template=='ButtonFrameTemplate')
 assert(addon.RXPFrame.phyzChrome.TitleText.textValue=='Phyz Leveling')
-assert(addon.RXPFrame.phyzChrome.portrait.texture=='Interface/Icons/INV_Misc_Map_01')
+assert(addon.RXPFrame.phyzChrome.portrait.texture=='Interface/Icons/INV_Misc_ScrollUnrolled01')
 ForceBasicFrame=true
 addon.RXPFrame.phyzChrome=nil
 addon.SetupGuideWindow()
@@ -161,7 +161,12 @@ assert(not addon.phyzCurrentButton.shown, 'Original icon must be hidden behind n
 addon.phyzCurrentButton.phyzNative.scripts.OnClick()
 assert(addon.scrolled==9 and addon.changedStep==nil, 'My step must not change progress')
 addon.RXPFrame.phyzClose.scripts.OnClick()
-assert(addon.toggled)
+assert(addon.RXPFrame.phyzMinimized and not addon.RXPFrame.shown)
+assert(addon.RXPFrame.phyzMinimizedBar.shown and not addon.toggled)
+addon.RXPFrame.phyzMinimizedBar.scripts.OnClick()
+assert(not addon.RXPFrame.phyzMinimized and addon.RXPFrame.shown)
+assert(not addon.RXPFrame.phyzMinimizedBar.shown)
+assert(addon.questCheckButton.phyzLabel.SetFontArgs[2]==10)
 for _, width in ipairs({220,400,640}) do
     addon.RXPFrame.width=width
     addon.RXPFrame.scripts.OnSizeChanged()

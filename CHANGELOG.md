@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.9 — 2026-11-27
+
+- Replace the close X with a minus button that minimizes the guide to a small restore bar, without disabling the addon.
+- Reduce footer button labels to 10-point text for additional clearance.
+- Replace the crossed map portrait with a quest-scroll icon.
+
 ## 0.4.8 — 2026-11-26
 
 - Add Mark as complete and Mark as not complete to the step context menu.

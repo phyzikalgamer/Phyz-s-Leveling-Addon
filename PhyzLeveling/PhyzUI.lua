@@ -113,6 +113,7 @@ local function NativeButton(button, label)
     local native = button.phyzNative
     native:SetText(label)
     button.phyzLabel = native:GetFontString()
+    button.phyzLabel:SetFont(addon.font, 10, '')
     button:Hide()
     native:Show()
     return native
@@ -152,6 +153,34 @@ local function SkinArrow()
     arrow.text:SetFont(addon.font, math.max(11, p and p.arrowText or 9), 'OUTLINE')
 end
 
+function addon.ToggleGuideMinimized()
+    if InCombatLockdown() then
+        print('Phyz: minimize or restore the guide after combat.')
+        return
+    end
+    local frame = addon.RXPFrame
+    if not frame.phyzMinimizedBar then
+        local bar = CreateFrame('Button', nil, UIParent, 'UIPanelButtonTemplate')
+        bar:SetSize(170, 26)
+        bar:SetPoint('TOPLEFT', frame, 'TOPLEFT', 0, 0)
+        bar:SetText('Phyz Leveling  +')
+        bar:SetFrameLevel(frame:GetFrameLevel() + 5)
+        bar:SetScript('OnClick', addon.ToggleGuideMinimized)
+        frame.phyzMinimizedBar = bar
+        frame:HookScript('OnShow', function(self)
+            if self.phyzMinimized then self:Hide() end
+        end)
+    end
+    frame.phyzMinimized = not frame.phyzMinimized
+    if frame.phyzMinimized then
+        frame:Hide()
+        frame.phyzMinimizedBar:Show()
+    else
+        frame.phyzMinimizedBar:Hide()
+        frame:Show()
+    end
+end
+
 local function ApplySkin()
     if InCombatLockdown() then return end
     if not addon.activeTheme or addon.activeTheme.name ~= 'WoW Classic' then return end
@@ -170,13 +199,24 @@ local function ApplySkin()
         local title = chrome.TitleText or (chrome.TitleContainer and chrome.TitleContainer.TitleText)
         if title then title:SetText('Phyz Leveling') end
         local portrait = chrome.portrait or (chrome.PortraitContainer and chrome.PortraitContainer.portrait)
-        if portrait then portrait:SetTexture('Interface/Icons/INV_Misc_Map_01') end
+        if portrait then portrait:SetTexture('Interface/Icons/INV_Misc_ScrollUnrolled01') end
         local close = chrome.CloseButton or chrome.closeButton
             or (chrome.TitleContainer and chrome.TitleContainer.CloseButton)
         if close then
-            close:SetScript('OnClick', addon.settings.ToggleActive)
-            frame.phyzClose = close
+            close:Hide()
         end
+        local minimize = CreateFrame('Button', nil, chrome, 'UIPanelButtonTemplate')
+        minimize:SetSize(24, 22)
+        minimize:SetPoint('TOPRIGHT', chrome, 'TOPRIGHT', -5, -5)
+        minimize:SetText('-')
+        minimize:SetScript('OnClick', addon.ToggleGuideMinimized)
+        minimize:SetScript('OnEnter', function(self)
+            GameTooltip:SetOwner(self, 'ANCHOR_TOP')
+            GameTooltip:SetText('Minimize guide', 1, 0.82, 0)
+            GameTooltip:Show()
+        end)
+        minimize:SetScript('OnLeave', function() GameTooltip:Hide() end)
+        frame.phyzClose = minimize
         frame.phyzChrome = chrome
     end
     frame:ClearBackdrop()
